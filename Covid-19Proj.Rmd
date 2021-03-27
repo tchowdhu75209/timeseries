@@ -70,3 +70,168 @@ est_arma = est.arma.wge(Post_Vaccine$new_deaths_per_million, p = 3, q = 2)
 wn_dr = artrans.wge(Post_Vaccine$new_deaths_per_million,est_arma$phi)
 wn_dr
 ```
+
+#### Factor Table  ####
+
+
+```{r pressure, echo=FALSE}
+factor.wge(est_arma$phi)
+```
+
+#### Forecast with ARMA (10 days) ####
+
+
+```{r pressure, echo=FALSE}
+
+for_arma = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = est_arma$p, theta = est_arma$theta, 
+                         n.ahead = 10, lastn = T)
+For_arma_ase = mean((for_arma$f - Post_Vaccine$new_deaths_per_million[(95-10+1):95])^2)
+For_arma_ase #2.943246 
+```
+
+
+#### Forecast with ARIMA (10 days) ####
+
+
+```{r pressure, echo=FALSE}
+# weekly term (1/.1369 = 6.67 or aprox. 7)
+for_aruma = fore.aruma.wge(Post_Vaccine$new_deaths_per_million, phi = est_arma$p, theta = est_arma$theta, 
+                           s = 7, n.ahead = 10, lastn = T)
+
+For_aruma_ase = mean((for_aruma$f - Post_Vaccine$new_deaths_per_million[(95-10+1):95])^2)
+For_aruma_ase #1.856851
+```
+
+
+#### Forecast with ARMA (25 days) ####
+
+
+```{r pressure, echo=FALSE}
+for_arma_25 = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = est_arma$p, theta = est_arma$theta, 
+                         n.ahead = 25, lastn = T)
+
+For_arma_ase_25 = mean((for_arma$f - Post_Vaccine$new_deaths_per_million[(95-25+1):95])^2)
+For_arma_ase_25 #3.634228
+
+```
+
+
+
+
+#### Forecast with ARMA (25 days) ####
+
+
+```{r pressure, echo=FALSE}
+# weekly term (1/.1369 = 6.67 or aprox. 7)
+
+
+for_aruma_25 = fore.aruma.wge(Post_Vaccine$new_deaths_per_million, phi = est_arma$p, theta = est_arma$theta, 
+                           s = 7, n.ahead = 25, lastn = T)
+
+For_aruma_ase_25 = mean((for_aruma$f - Post_Vaccine$new_deaths_per_million[(95-25+1):95])^2)
+For_aruma_ase_25 #4.67033
+
+```
+
+
+
+#### RollingWindow Function ####
+
+
+```{r pressure, echo=FALSE}
+Rolling_Window_ASE = function(series, trainingSize, horizon, s, d, phis, thetas)
+{
+  # trainingSize = 70
+  # horizon = 12
+  ASEHolder = numeric()
+  # s = 10
+  # d = 0
+  # phis = phis
+  # thetas = thetas
+  for( i in 1:(length(series)-(trainingSize + horizon) + 1))
+  {
+    forecasts = fore.aruma.wge(series[i:(i+(trainingSize-1))],phi = phis, theta = thetas, s = s, d = d,n.ahead = horizon)
+    ASE = mean((series[(trainingSize+i):(trainingSize+ i + (horizon) - 1)] - forecasts$f)^2)
+    ASEHolder[i] = ASE
+  }
+  ASEHolder
+  hist(ASEHolder)
+  WindowedASE = mean(ASEHolder)
+  print(horizon)
+  print(trainingSize)
+  print("The Summary Statistics for the Rolling Window ASE Are:")
+  print(summary(ASEHolder))
+  print(paste("The Rolling Window ASE is: ",WindowedASE))
+  return(WindowedASE)
+}
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
