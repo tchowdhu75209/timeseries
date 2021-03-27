@@ -11,7 +11,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
+library(tswge)
 All_Covid <- read_csv("All_Covid.csv")
 
 Post_Vaccine <- read_csv("Post_Vaccine.csv")
@@ -47,21 +47,26 @@ plotts.sample.wge(Post_Vaccine$new_deaths_per_million)
 
 ## Post Vaccine DataFrame: Analyze 'New Death Per Million' Timeseries plots 
 ## Pick p and q
-
+## Factor table for stationarity and seasonality analysis
 
 ```{r}
 # Post Vaccine Data
 plotts.sample.wge(Post_Vaccine$new_deaths_per_million)
-dr_aic = aic.wge(Post_Vaccine$new_deaths_per_million)
+dr_aic = aic.wge(Post_Vaccine$new_deaths_per_million) #picks p= 3 q = 2
 factor.wge(dr_aic$phi) # freq peak at 0 and .1369
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
+## Model Building
+WIth AR(3) and MA(2)
 
 ```{r pressure, echo=FALSE}
-plot(pressure)
+est_arma = est.arma.wge(Post_Vaccine$new_deaths_per_million, p = 3, q = 2)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+#### stationarize our dependant variable  ####
+
+
+```{r pressure, echo=FALSE}
+wn_dr = artrans.wge(Post_Vaccine$new_deaths_per_million,est_arma$phi)
+wn_dr
+```
