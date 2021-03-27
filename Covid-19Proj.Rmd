@@ -5,18 +5,55 @@ date: "3/27/2021"
 output: html_document
 ---
 
+# Datasets:
+1) All Covid
+2) Post Vaccine
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+All_Covid <- read_csv("All_Covid.csv")
+
+Post_Vaccine <- read_csv("Post_Vaccine.csv")
+
+
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#############
+#### EDA ####
+#############
 
-```{r cars}
-summary(cars)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+# All Covid Data
+plotts.wge(All_Covid$new_cases_per_million)
+plotts.wge(All_Covid$icu_patients_per_million)
+plotts.wge(All_Covid$hosp_patients_per_million)
+plotts.wge(All_Covid$new_vaccinations_smoothed_per_million)
+plotts.wge(All_Covid$new_deaths_per_million)
+
+# Post Vaccine
+plotts.wge(Post_Vaccine$new_cases_per_million)
+plotts.wge(Post_Vaccine$icu_patients_per_million)
+plotts.wge(Post_Vaccine$hosp_patients_per_million)
+plotts.wge(Post_Vaccine$new_vaccinations_smoothed_per_million)
+plotts.sample.wge(Post_Vaccine$new_deaths_per_million)
+
+```
+
+## Post Vaccine DataFrame: Analyze 'New Death Per Million' Timeseries plots 
+## Pick p and q
+
+
+```{r}
+# Post Vaccine Data
+plotts.sample.wge(Post_Vaccine$new_deaths_per_million)
+dr_aic = aic.wge(Post_Vaccine$new_deaths_per_million)
+factor.wge(dr_aic$phi) # freq peak at 0 and .1369
 ```
 
 ## Including Plots
