@@ -1,6 +1,6 @@
 ---
 title: "Time Series - Covid-19Proj"
-author: "Tai"
+author: "Tai Chowdhury and Simerpreet Kaur"
 date: "3/27/2021"
 output: html_document
 ---
