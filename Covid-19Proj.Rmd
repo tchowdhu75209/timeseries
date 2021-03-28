@@ -79,12 +79,17 @@ For_ase_m2_10 = mean((m2_forcast_short$f - Post_Vaccine$new_deaths_per_million[(
 For_ase_m2_10 #0.6871846
 ```
 
-#### stationarize our dependant variable  ####
+#### ARIMA Model 1 (with no seasonality)
 
 
 ```{r pressure, echo=FALSE}
-wn_dr = artrans.wge(Post_Vaccine$new_deaths_per_million,est_arma$phi)
-wn_dr
+
+#Check for white noise
+plotts.sample.wge(Post_Vaccine$new_deaths_per_million) #Damped sinusoudal behavior in ACF, also indication of seasonality
+
+Dif_arima1 = artrans.wge(Post_Vaccine$new_deaths_per_million, phi.tr=1)#dif data does not look like white noise
+aic5.wge(Dif_arima1) # picks p = 5 q = 2
+
 ```
 
 #### Factor Table  ####
