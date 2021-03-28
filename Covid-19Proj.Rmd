@@ -61,6 +61,11 @@ For_ase_m1_10 = mean((m1_forcast_short$f - Post_Vaccine$new_deaths_per_million[(
 For_ase_m1_10 #2.943246
 
 
+m1_forcast_long = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = est_m1$p, theta = est_m1$theta, 
+                         n.ahead = 25, lastn = T)
+For_ase_m1_25 = mean((m1_forcast_short$f - Post_Vaccine$new_deaths_per_million[(95-25+1):95])^2)
+For_ase_m1_25 #3.634228
+
 ```
 
 ## ARMA Model 2 - give range for AIC5
@@ -77,6 +82,14 @@ m2_forcast_short = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = est_
                          n.ahead = 10, lastn = T)
 For_ase_m2_10 = mean((m2_forcast_short$f - Post_Vaccine$new_deaths_per_million[(95-10+1):95])^2)
 For_ase_m2_10 #0.6871846
+
+m2_forcast_long = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = est_m2$p, theta = est_m2$theta, 
+                         n.ahead = 25, lastn = T)
+For_ase_m2_25 = mean((m2_forcast_short$f - Post_Vaccine$new_deaths_per_million[(95-25+1):95])^2)
+For_ase_m2_25 #3.003448
+
+
+
 ```
 
 #### ARIMA Model 1 (with no seasonality)
@@ -89,6 +102,23 @@ plotts.sample.wge(Post_Vaccine$new_deaths_per_million) #Damped sinusoudal behavi
 
 Dif_arima1 = artrans.wge(Post_Vaccine$new_deaths_per_million, phi.tr=1)#dif data does not look like white noise
 aic5.wge(Dif_arima1) # picks p = 5 q = 2
+arima1_est = est.arma.wge(Dif_arima1, p=5, q=2)
+mean(Post_Vaccine$new_deaths_per_million) # 7.093083
+# check forpresence of (1-B) by overfitting 
+of_arima1_est = est.ar.wge(Post_Vaccine$new_deaths_per_million, p=8, type='burg') # (1-B) exist.
+of_arima1_est$aic #0.6180465
+
+m3_forcast_short = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = of_arima1_est$p, 
+                         n.ahead = 10, lastn = T)
+For_ase_m3_10 = mean((m3_forcast_short$f - Post_Vaccine$new_deaths_per_million[(95-10+1):95])^2)
+For_ase_m3_10 #1.271954
+
+m3_forcast_long = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = of_arima1_est$p, 
+                         n.ahead = 25, lastn = T)
+For_ase_m2_25 = mean((m3_forcast_short$f - Post_Vaccine$new_deaths_per_million[(95-25+1):95])^2)
+For_ase_m2_25 #3.071347
+
+
 
 ```
 
@@ -98,135 +128,6 @@ aic5.wge(Dif_arima1) # picks p = 5 q = 2
 ```{r pressure, echo=FALSE}
 factor.wge(est_arma$phi)
 ```
-
-#### Forecast with ARMA (10 days) ####
-
-
-```{r pressure, echo=FALSE}
-
-for_arma = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = est_arma$p, theta = est_arma$theta, 
-                         n.ahead = 10, lastn = T)
-For_arma_ase = mean((for_arma$f - Post_Vaccine$new_deaths_per_million[(95-10+1):95])^2)
-For_arma_ase #2.943246 
-```
-
-
-#### Forecast with ARIMA (10 days) ####
-
-
-```{r pressure, echo=FALSE}
-# weekly term (1/.1369 = 6.67 or aprox. 7)
-for_aruma = fore.aruma.wge(Post_Vaccine$new_deaths_per_million, phi = est_arma$p, theta = est_arma$theta, 
-                           s = 7, n.ahead = 10, lastn = T)
-
-For_aruma_ase = mean((for_aruma$f - Post_Vaccine$new_deaths_per_million[(95-10+1):95])^2)
-For_aruma_ase #1.856851
-```
-
-
-#### Forecast with ARMA (25 days) ####
-
-
-```{r pressure, echo=FALSE}
-for_arma_25 = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = est_arma$p, theta = est_arma$theta, 
-                         n.ahead = 25, lastn = T)
-
-For_arma_ase_25 = mean((for_arma$f - Post_Vaccine$new_deaths_per_million[(95-25+1):95])^2)
-For_arma_ase_25 #3.634228
-
-```
-
-
-
-
-#### Forecast with ARMA (25 days) ####
-
-
-```{r pressure, echo=FALSE}
-# weekly term (1/.1369 = 6.67 or aprox. 7)
-
-
-for_aruma_25 = fore.aruma.wge(Post_Vaccine$new_deaths_per_million, phi = est_arma$p, theta = est_arma$theta, 
-                           s = 7, n.ahead = 25, lastn = T)
-
-For_aruma_ase_25 = mean((for_aruma$f - Post_Vaccine$new_deaths_per_million[(95-25+1):95])^2)
-For_aruma_ase_25 #4.67033
-
-```
-
-
-
-#### RollingWindow Function ####
-
-
-```{r pressure, echo=FALSE}
-Rolling_Window_ASE = function(series, trainingSize, horizon, s, d, phis, thetas)
-{
-  # trainingSize = 70
-  # horizon = 12
-  ASEHolder = numeric()
-  # s = 10
-  # d = 0
-  # phis = phis
-  # thetas = thetas
-  for( i in 1:(length(series)-(trainingSize + horizon) + 1))
-  {
-    forecasts = fore.aruma.wge(series[i:(i+(trainingSize-1))],phi = phis, theta = thetas, s = s, d = d,n.ahead = horizon)
-    ASE = mean((series[(trainingSize+i):(trainingSize+ i + (horizon) - 1)] - forecasts$f)^2)
-    ASEHolder[i] = ASE
-  }
-  ASEHolder
-  hist(ASEHolder)
-  WindowedASE = mean(ASEHolder)
-  print(horizon)
-  print(trainingSize)
-  print("The Summary Statistics for the Rolling Window ASE Are:")
-  print(summary(ASEHolder))
-  print(paste("The Rolling Window ASE is: ",WindowedASE))
-  return(WindowedASE)
-}
-
-
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
