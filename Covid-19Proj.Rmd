@@ -45,22 +45,38 @@ plotts.sample.wge(Post_Vaccine$new_deaths_per_million)
 
 ```
 
-## Post Vaccine DataFrame: Analyze 'New Death Per Million' Timeseries plots 
-## Pick p and q
-## Factor table for stationarity and seasonality analysis
+## ARMA Model 1
 
 ```{r}
-# Post Vaccine Data
-plotts.sample.wge(Post_Vaccine$new_deaths_per_million)
-dr_aic = aic.wge(Post_Vaccine$new_deaths_per_million) #picks p= 3 q = 2
-factor.wge(dr_aic$phi) # freq peak at 0 and .1369
+pq_m1 <- aic.wge(Post_Vaccine$new_deaths_per_million) #picks p = 3 q = 2
+factor.wge(pq_m1$phi) #close to unit circle but we will continue with the model.
+factor.wge(pq_m1$theta)
+est_m1 = est.arma.wge(Post_Vaccine$new_deaths_per_million, p = 3, q = 2)
+mean(Post_Vaccine$new_deaths_per_million) #mean = 7.093083
+est_m1$aic #.96057
+
+m1_forcast_short = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = est_m1$p, theta = est_m1$theta, 
+                         n.ahead = 10, lastn = T)
+For_ase_m1_10 = mean((m1_forcast_short$f - Post_Vaccine$new_deaths_per_million[(95-10+1):95])^2)
+For_ase_m1_10 #2.943246
+
+
 ```
 
-## Model Building
-WIth AR(3) and MA(2)
+## ARMA Model 2 - give range for AIC5
 
 ```{r pressure, echo=FALSE}
-est_arma = est.arma.wge(Post_Vaccine$new_deaths_per_million, p = 3, q = 2)
+pq_m2 <- aic.wge(Post_Vaccine$new_deaths_per_million, p = 0:13, q = 0:8) # picks (8,1)
+factor.wge(pq_m2$phi) #close to unit circle but we will continue with the model.
+factor.wge(pq_m2$theta)
+est_m2 = est.arma.wge(Post_Vaccine$new_deaths_per_million, p = 8, q = 1)
+mean(Post_Vaccine$new_deaths_per_million) #mean = 7.093083
+est_m2$aic #0.5467847
+
+m2_forcast_short = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = est_m2$p, theta = est_m2$theta, 
+                         n.ahead = 10, lastn = T)
+For_ase_m2_10 = mean((m2_forcast_short$f - Post_Vaccine$new_deaths_per_million[(95-10+1):95])^2)
+For_ase_m2_10 #0.6871846
 ```
 
 #### stationarize our dependant variable  ####
