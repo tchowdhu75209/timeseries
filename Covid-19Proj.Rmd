@@ -122,11 +122,26 @@ For_ase_m2_25 #3.071347
 
 ```
 
-#### Factor Table  ####
+#### ARMA MODEL 2 - (with seasonality)  ####
 
 
 ```{r pressure, echo=FALSE}
-factor.wge(est_arma$phi)
+diff_arima2 = artrans.wge(Dif_arima1,phi.tr = c(rep(0,6),1)) #Looks statinary
+aic5.wge(diff_arima2, p=0:13, q=0:3) #Pick p=7, q=0
+aic5.wge(diff_arima2, p=0:13, q=0:3, type = 'bic') #bic pics MA2 which does not look suitable for our dataset
+arima2_est = est.arma.wge(diff_arima2, p=7, q = 0)
+mean(Post_Vaccine$new_deaths_per_million) # 7.093083
+
+
+m4_forcast_short = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = arima2_est$p, theta = arima2_est$theta, 
+                         n.ahead = 10, lastn = T)
+For_ase_m4_10 = mean((m4_forcast_short$f - Post_Vaccine$new_deaths_per_million[(95-10+1):95])^2)
+For_ase_m4_10 
+
+m4_forcast_long = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = arima2_est$p, theta = arima2_est$theta, 
+                         n.ahead = 25, lastn = T)
+For_ase_m2_25 = mean((m4_forcast_short$f - Post_Vaccine$new_deaths_per_million[(95-25+1):95])^2)
+For_ase_m2_25 
 ```
 
 
