@@ -68,7 +68,7 @@ For_ase_m1_25 #3.634228
 
 ```
 
-## ARMA Model 2 - give range for AIC5
+## ARMA Model 2 - higher p,q range
 
 ```{r pressure, echo=FALSE}
 pq_m2 <- aic.wge(Post_Vaccine$new_deaths_per_million, p = 0:13, q = 0:8) # picks (8,1)
