@@ -59,12 +59,19 @@ m1_forcast_short = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = est_
                          n.ahead = 10, lastn = T)
 For_ase_m1_10 = mean((m1_forcast_short$f - Post_Vaccine$new_deaths_per_million[(95-10+1):95])^2)
 For_ase_m1_10 #2.943246
-
+Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 10, d = 1, phis = est_m1$phi, 
+                   s= 7, thetas = est_m1$theta
+                   )#24.84
 
 m1_forcast_long = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = est_m1$p, theta = est_m1$theta, 
                          n.ahead = 25, lastn = T)
 For_ase_m1_25 = mean((m1_forcast_long$f - Post_Vaccine$new_deaths_per_million[(95-25+1):95])^2)
 For_ase_m1_25 #7.661675
+Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 25, d = 1, phis = est_m1$phi, 
+                   s= 7, thetas = est_m1$theta
+                   )#234.6234
+
+
 
 ## Colored Plot for short term
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
@@ -79,7 +86,7 @@ lines(seq(87,96,1),m1_forcast_long$f , col = "red")
 ## ARMA Model 2 - higher p,q range
 
 ```{r pressure, echo=FALSE}
-pq_m2 <- aic.wge(Post_Vaccine$new_deaths_per_million, p = 0:13, q = 0:8) # picks (8,1)
+pq_m2 <- aic.wge(Post_Vaccine$new_deaths_per_million, p = 0:13, q = 0:3) # picks (8,1)
 factor.wge(pq_m2$phi) #close to unit circle but we will continue with the model.
 factor.wge(pq_m2$theta)
 est_m2 = est.arma.wge(Post_Vaccine$new_deaths_per_million, p = 8, q = 1)
@@ -90,11 +97,17 @@ m2_forcast_short = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = est_
                          n.ahead = 10, lastn = T)
 For_ase_m2_10 = mean((m2_forcast_short$f - Post_Vaccine$new_deaths_per_million[(95-10+1):95])^2)
 For_ase_m2_10 #0.6871846
+Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 10, d = 0, phis = est_m2$phi, 
+                   s= 0, thetas = est_m2$theta
+                   )#15.70768
 
 m2_forcast_long = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = est_m2$p, theta = est_m2$theta, 
                          n.ahead = 25, lastn = T)
 For_ase_m2_25 = mean((m2_forcast_long$f - Post_Vaccine$new_deaths_per_million[(95-25+1):95])^2)
 For_ase_m2_25 #2.579239
+Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 25, d = 1, phis = est_m2$phi, 
+                   s= 7, thetas = est_m2$theta
+                   )#1094.909
 
 ## Colored Plot for short term
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
@@ -126,19 +139,28 @@ m3_forcast_short = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = of_a
                          n.ahead = 10, lastn = T)
 For_ase_m3_10 = mean((m3_forcast_short$f - Post_Vaccine$new_deaths_per_million[(95-10+1):95])^2)
 For_ase_m3_10 #1.271954
+Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 10, d = 1, phis = of_arima1_est$phi, thetas = 0 ,s= 7)#25.64708
 
-m3_forcast_long = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = of_arima1_est$p, 
-                         n.ahead = 25, lastn = T)
-For_ase_m2_25 = mean((m3_forcast_long$f - Post_Vaccine$new_deaths_per_million[(95-25+1):95])^2)
+m3_forcast_long_40 = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = of_arima1_est$p, 
+                         n.ahead = 40, lastn = T)
+
+m3_forcast_long_100 = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = of_arima1_est$p, 
+                         n.ahead = 100, lastn = T)
+
+m3_forcast_long_400 = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = of_arima1_est$p, 
+                         n.ahead = 400, lastn = T)
+
+For_ase_m2_25 = mean((m3_forcast_long_40$f - Post_Vaccine$new_deaths_per_million[(95-25+1):95])^2)
 For_ase_m2_25 #9.905129
+Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 25, d = 1, phis = of_arima1_est$phi, thetas = 0 ,s= 7)#30.87265
 
 ## Colored Plot for short term
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
 lines(seq(87,96,1),m3_forcast_short$f  , col = "red")
-
+seq
 ## Colored Plot for long term
-plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
-lines(seq(87,96,1),m3_forcast_long$f, col = "red")
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,136))
+lines(seq((136-40+1),136,1),m3_forcast_long_40$f, col = "red")
 
 ```
 
@@ -163,6 +185,12 @@ m4_forcast_long = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = arima
 For_ase_m2_25 = mean((m4_forcast_long$f - Post_Vaccine$new_deaths_per_million[(95-25+1):95])^2)
 For_ase_m2_25 
 
+m4_forcast_long_40 = fore.arma.wge(Post_Vaccine$new_deaths_per_million, phi = arima2_est$p, theta = arima2_est$theta, 
+                         n.ahead = 40, lastn = T)
+For_ase_m2_25 = mean((m4_forcast_long$f - Post_Vaccine$new_deaths_per_million[(95-25+1):95])^2)
+For_ase_m2_25 
+
+
 ## Colored Plot for short term
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
 lines(seq(87,96,1),m4_forcast_short$f  , col = "red")
@@ -170,6 +198,11 @@ lines(seq(87,96,1),m4_forcast_short$f  , col = "red")
 ## Colored Plot for long term
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
 lines(seq(87,96,1),m4_forcast_long$f, col = "red")
+
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,136))
+lines(seq((136-40+1),136,1),m4_forcast_long_40$f, col = "red")
+
+
 ```
 
 
