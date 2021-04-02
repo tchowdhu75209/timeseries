@@ -236,7 +236,7 @@ ASE2 #1.332711
 
 
 ```{r pressure, echo=FALSE}
-?ccf
+
 #Lagging Post Vaccine variables
 ccf(Post_Vaccine$new_deaths_per_million,Post_Vaccine$new_cases_per_million)
 ccf(Post_Vaccine$new_deaths_per_million,Post_Vaccine$icu_patients_per_million)
@@ -268,11 +268,8 @@ AIC(fit3_m3) #321.61
 
 # Predictions with lags
 preds3 = predict(fit3_m3, newxreg = cbind(Post_Vaccine$new_cases_per_million[92:96], Post_Vaccine$icu_patients_per_million[92:96],Post_Vaccine$hosp_patients_per_million[92:96], Post_Vaccine$new_vaccinations_smoothed_per_million[92:96]))
-ASE2 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds3$pred)^2)
-ASE2 #2.97754
-
-
-
+ASE3 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds3$pred)^2)
+ASE3 #2.97754
 
 
 
