@@ -191,7 +191,7 @@ AIC(fit2_m1) #312.61
 
 
 
-## Colored Plot for short term
+## Colored Plot for short term  NEEDS WORK
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
 lines(seq(87,96,1),m4_forcast_short$f  , col = "red")
 
@@ -200,7 +200,40 @@ lines(seq(87,96,1),m4_forcast_short$f  , col = "red")
 ```
 
 
+#### Multivariate  ( Trend added, no lag ) ####
 
+
+
+```{r pressure, echo=FALSE}
+#with trend
+
+# ASE for model with no lag and trend (last 5)
+t=1:96
+Post_Vaccine$t = t
+Post_Vaccine2 = Post_Vaccine[1:91,]
+covidfit2_m2=lm(new_deaths_per_million~ t+ new_cases_per_million+icu_patients_per_million+hosp_patients_per_million
+          +new_vaccinations_smoothed_per_million, data = Post_Vaccine2)
+AIC(covidfit2_m2) #401.7352
+
+M2_final_res=aic.wge(covidfit2_m2$residuals,p=0:10, q=0)  # AIC picks p=9
+fit2_m2=arima(Post_Vaccine2$new_deaths_per_million,order=c(9,0,0),xreg=expvar_vaccine2)
+fit2_m2
+AIC(fit2_m2) #312.6069, not much of a change from previous trend
+
+
+preds2 = predict(fit2_m2, newxreg = cbind(Post_Vaccine2$new_cases_per_million[92:96], Post_Vaccine2$icu_patients_per_million[92:96],Post_Vaccine2$hosp_patients_per_million[92:96], Post_Vaccine2$new_vaccinations_smoothed_per_million[92:96]))
+ASE2 = mean((Post_Vaccine2$new_deaths_per_million[92:96] - preds2$)^2)
+ASE2 #62.89
+
+
+
+## Colored Plot for short term  NEEDS WORK
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
+lines(seq(87,96,1),m4_forcast_short$f  , col = "red")
+
+
+
+```
 
 
 
