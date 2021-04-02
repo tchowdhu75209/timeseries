@@ -146,7 +146,7 @@ lines(seq(87,96,1),m4_forcast_short$f  , col = "red")
 
 ```
 
-#### Multivariate  (No Trend) ####
+#### Multivariate  (No Trend/lag) ####
 
 
 
@@ -397,17 +397,17 @@ set.seed(2)
 Vacc_fit.mlp1 = mlp(ts(Vacc_Train$new_deaths_per_million) ,reps = 50,comb = "mean", xreg = Vacc_xreg ) #combine all 50 forcast
 Vacc_fit.mlp1 # 5 hnode #mse 1.11
 plot(Vacc_fit.mlp1)
-fore_vacc_df = data.frame(Vaccine = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
-Vacc_fore.mlp1 = forecast(Vacc_fit.mlp1, h = 6, xreg = fore_vacc_df) 
+fore_vacc_df_exp = data.frame(Vaccine = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
+Vacc_fore.mlp1 = forecast(Vacc_fit.mlp1, h = 5, xreg = fore_vacc_df) 
 plot(Vacc_fore.mlp1)
 MLP_ASE1 = mean((Vacc_Test$new_deaths_per_million- Vacc_fore.mlp1$mean)^2)
-MLP_ASE1 
+MLP_ASE1 #0.8900434
   
 
 ```
 
 
-#### MLP With Vaccine Variable Only####
+#### MLP With all explanatory variables####
 
 ```{r pressure, echo=FALSE}
 library(nnfor)
@@ -416,16 +416,16 @@ library(vars)
 library(tswge)
 Vacc_Train = Post_Vaccine[1:91,]
 Vacc_Test = Post_Vaccine[92:96,]
-Vacc_xreg = data.frame(Vaccine = ts(Vacc_Train$new_vaccinations_smoothed_per_million))
+all_exp_xreg = data.frame(Vaccine = ts(Vacc_Train$new_vaccinations_smoothed_per_million), NewCase = ts(Vacc_Train$new_cases_per_million), Hosp = ts(Vacc_Train$hosp_patients_per_million), ICU = ts(Vacc_Train$icu_patients_per_million))
 set.seed(2)
-Vacc_fit.mlp1 = mlp(ts(Vacc_Train$new_deaths_per_million) ,reps = 50,comb = "mean", xreg = Vacc_xreg ) #combine all 50 forcast
-Vacc_fit.mlp1 # 5 hnode #mse 1.11
-plot(Vacc_fit.mlp1)
-fore_vacc_df = data.frame(Vaccine = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
-Vacc_fore.mlp1 = forecast(Vacc_fit.mlp1, h = 6, xreg = fore_vacc_df) 
-plot(Vacc_fore.mlp1)
-MLP_ASE1 = mean((Vacc_Test$new_deaths_per_million- Vacc_fore.mlp1$mean)^2)
-MLP_ASE1 
+exp_fit.mlp1 = mlp(ts(Vacc_Train$new_deaths_per_million) ,reps = 50,comb = "mean", xreg = all_exp_xreg ) #combine all 50 forcast
+exp_fit.mlp1 # 5 hnode #mse 1.11
+plot(exp_fit.mlp1)
+fore_all_exp_df = data.frame(Vaccine = ts(Post_Vaccine$new_vaccinations_smoothed_per_million), NewCase = ts(Post_Vaccine$new_cases_per_million), Hosp = ts(Post_Vaccine$hosp_patients_per_million), ICU = ts(Post_Vaccine$icu_patients_per_million))
+allexp_fore.m2p1 = forecast(exp_fit.mlp1, h = 5, xreg = fore_all_exp_df) 
+plot(allexp_fore.m2p1)
+MLP_ASE2 = mean((Vacc_Test$new_deaths_per_million- allexp_fore.m2p1$mean)^2)
+MLP_ASE2 #0.5973581
   
 
 ```
