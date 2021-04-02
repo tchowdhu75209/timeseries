@@ -167,7 +167,7 @@ acf(covfit1$residuals)
 
 fit1=arima(Post_Vaccine$new_deaths_per_million,order=c(9,0,0),xreg=expvar_vaccine)
 fit1
-AIC(fit1) #323.68
+AIC(fit1) #322.8156
 
 acf(fit1$residuals) # looks like white noise behavior
 ltest = ljung.wge(fit$resid)
@@ -182,16 +182,16 @@ expvar_vaccine2 = data.frame(Post_Vaccine2$new_cases_per_million, Post_Vaccine2$
 
 covidfit2_mi=lm(new_deaths_per_million~ new_cases_per_million+icu_patients_per_million+hosp_patients_per_million
           +new_vaccinations_smoothed_per_million, data = Post_Vaccine2)
-AIC(covidfit2_mi) #402.9405
+AIC(covidfit2_mi) #402.4385
 
 M1_final_res=aic.wge(covidfit2_mi$residuals,p=0:10, q=0)  # AIC picks p=9
 fit2_m1=arima(Post_Vaccine2$new_deaths_per_million,order=c(9,0,0),xreg=cbind(Post_Vaccine2$new_cases_per_million, Post_Vaccine2$icu_patients_per_million,Post_Vaccine2$hosp_patients_per_million, Post_Vaccine2$new_vaccinations_smoothed_per_million))
 fit2_m1
-AIC(fit2_m1) #312.61
+AIC(fit2_m1) #312.5972
 
 preds1 = predict(fit2_m1, newxreg = cbind(Post_Vaccine$new_cases_per_million[92:96], Post_Vaccine$icu_patients_per_million[92:96],Post_Vaccine$hosp_patients_per_million[92:96], Post_Vaccine$new_vaccinations_smoothed_per_million[92:96]))
 ASE1 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds1$pred)^2)
-ASE1 #1.332711
+ASE1 #2.491884
 
 
 ## Colored Plot for short term  NEEDS WORK
@@ -216,17 +216,17 @@ Post_Vaccine$t = t
 Post_Vaccine2 = Post_Vaccine[1:91,]
 covidfit2_m2=lm(new_deaths_per_million~ t+ new_cases_per_million+icu_patients_per_million+hosp_patients_per_million
           +new_vaccinations_smoothed_per_million, data = Post_Vaccine2)
-AIC(covidfit2_m2) #401.7352
+AIC(covidfit2_m2) #401.0608
 
 M2_final_res=aic.wge(covidfit2_m2$residuals,p=0:10, q=0)  # AIC picks p=9
 fit2_m2=arima(Post_Vaccine2$new_deaths_per_million,order=c(9,0,0),xreg=cbind(Post_Vaccine2$new_cases_per_million, Post_Vaccine2$icu_patients_per_million,Post_Vaccine2$hosp_patients_per_million, Post_Vaccine2$new_vaccinations_smoothed_per_million))
 fit2_m2
-AIC(fit2_m2) #312.6069, not much of a change from previous trend
+AIC(fit2_m2) #312.5972
 
 # Predictions with trend
 preds2 = predict(fit2_m2, newxreg = cbind(Post_Vaccine$new_cases_per_million[92:96], Post_Vaccine$icu_patients_per_million[92:96],Post_Vaccine$hosp_patients_per_million[92:96], Post_Vaccine$new_vaccinations_smoothed_per_million[92:96]))
 ASE2 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds2$pred)^2)
-ASE2 #1.332711
+ASE2 #2.491884
 
 ```
 
@@ -259,7 +259,7 @@ Post_Vaccine$t = t
 Post_Vaccine2 = Post_Vaccine[1:91,]
 covidfit3_m3=lm(new_deaths_per_million~ t+ new_cases_per_million1+icu_patients_per_million1+hosp_patients_per_million1
           +new_vaccinations_smoothed_per_million1, data = Post_Vaccine2)
-AIC(covidfit3_m3) #422.46
+AIC(covidfit3_m3) #422.3541
 
 M3_final_res=aic.wge(covidfit3_m3$residuals,p=0:10, q=0)  # AIC picks p=9
 fit3_m3=arima(Post_Vaccine2$new_deaths_per_million,order=c(9,0,0),xreg=cbind(Post_Vaccine2$new_cases_per_million1, Post_Vaccine2$icu_patients_per_million1,Post_Vaccine2$hosp_patients_per_million1, Post_Vaccine2$new_vaccinations_smoothed_per_million1))
@@ -269,7 +269,7 @@ AIC(fit3_m3) #321.61
 # Predictions with lags
 preds3 = predict(fit3_m3, newxreg = cbind(Post_Vaccine$new_cases_per_million[92:96], Post_Vaccine$icu_patients_per_million[92:96],Post_Vaccine$hosp_patients_per_million[92:96], Post_Vaccine$new_vaccinations_smoothed_per_million[92:96]))
 ASE3 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds3$pred)^2)
-ASE3 #2.97754
+ASE3 #3.652182
 
 
 
@@ -293,8 +293,8 @@ ests_icu = aic.wge(Post_Vaccine$icu_patients_per_million) #picks 2,1
 est_icu = est.arma.wge(Post_Vaccine$icu_patients_per_million,p = 2, q = 1)
 Fore_icu = fore.arma.wge(Post_Vaccine$icu_patients_per_million,phi = est_icu$phi, theta = est_icu$theta, n.ahead = 5)
 
-ests_hosp = aic.wge(Post_Vaccine$hosp_patients_per_million) #picks 2,1
-est_hosp = est.arma.wge(Post_Vaccine$hosp_patients_per_million,p = 2, q = 1)
+ests_hosp = aic.wge(Post_Vaccine$hosp_patients_per_million) #picks 4,1
+est_hosp = est.arma.wge(Post_Vaccine$hosp_patients_per_million,p = 4, q = 1)
 Fore_hos = fore.arma.wge(Post_Vaccine$hosp_patients_per_million,phi = est_hosp$phi, theta = est_hosp$theta, n.ahead = 5)
 
 ests_vaccine = aic.wge(Post_Vaccine$new_vaccinations_smoothed_per_million) #picks 3,1
