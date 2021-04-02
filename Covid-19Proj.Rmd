@@ -329,11 +329,10 @@ covidfit4_m4=lm(new_deaths_per_million~ t+ new_cases_per_million1+icu_patients_p
           +new_vaccinations_smoothed_per_million1, data = Post_Vaccine2)
 AIC(covidfit4_m4) #422.4621
 
+# NEEDS ATTENTION
 preds4 = predict(covidfit4_m4, newxreg = cbind(Fore_newcase1$f[1:5],Fore_icu1$f[1:5],Fore_hos1$f, Fore_vaccine1$f, Post_Vaccine$t[96:100]))
-ASE4 = mean((Post_Vaccine$new_deaths_per_million - preds4$ [1:5])^2)
-ASE4 #13.06587
-
-preds4$pred
+ASE4 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds4[1:5])^2)
+ASE4 
 
 ```
 
