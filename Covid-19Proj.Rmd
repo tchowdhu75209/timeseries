@@ -253,7 +253,7 @@ Post_Vaccine$icu_patients_per_million1 = icu_patients_per_million1
 Post_Vaccine$hosp_patients_per_million1 = hosp_patients_per_million1
 Post_Vaccine$new_vaccinations_smoothed_per_million1 = new_vaccinations_smoothed_per_million1
 
-# ASE for model with no lag and trend (last 5)
+# ASE for model3
 t=1:96
 Post_Vaccine$t = t
 Post_Vaccine2 = Post_Vaccine[1:91,]
@@ -277,8 +277,65 @@ ASE3 #2.97754
 
 
 
+#### Forecast Features ####
 
 
+
+```{r pressure, echo=FALSE}
+
+
+ests_newc = aic.wge(Post_Vaccine$new_cases_per_million)
+est_new_case = est.arma.wge(Post_Vaccine$new_cases_per_million,p = 5, q = 1)
+Fore_newcase = fore.arma.wge(Post_Vaccine$new_cases_per_million,phi = est_new_case$phi, theta = est_new_case$theta, n.ahead = 5)
+
+
+ests_icu = aic.wge(Post_Vaccine$icu_patients_per_million) #picks 2,1
+est_icu = est.arma.wge(Post_Vaccine$icu_patients_per_million,p = 2, q = 1)
+Fore_icu = fore.arma.wge(Post_Vaccine$icu_patients_per_million,phi = est_icu$phi, theta = est_icu$theta, n.ahead = 5)
+
+ests_hosp = aic.wge(Post_Vaccine$hosp_patients_per_million) #picks 2,1
+est_hosp = est.arma.wge(Post_Vaccine$hosp_patients_per_million,p = 2, q = 1)
+Fore_hos = fore.arma.wge(Post_Vaccine$hosp_patients_per_million,phi = est_hosp$phi, theta = est_hosp$theta, n.ahead = 5)
+
+ests_vaccine = aic.wge(Post_Vaccine$new_vaccinations_smoothed_per_million) #picks 3,1
+est_vaccine = est.arma.wge(Post_Vaccine$new_vaccinations_smoothed_per_million,p = 3, q = 1)
+Fore_vaccine = fore.arma.wge(Post_Vaccine$new_vaccinations_smoothed_per_million,phi = est_vaccine$phi, theta = est_vaccine$theta, n.ahead = 5)
+
+aic5.wge(BSales$ad_online, p = 0:10)
+est_online = est.arma.wge(BSales$ad_online,p = 6)
+dev.off()
+plot.ts(BSales$ad_online[1:100])
+ad_onlineFORECAST = fore.arma.wge(BSales$ad_online,phi = est_online$phi, n.ahead = 6)
+
+
+
+```
+
+#### with trend and lagging ####
+
+
+
+```{r pressure, echo=FALSE}
+
+Fore_newcase1 = lag(Fore_newcase,1)
+Fore_icu1 = lag(Fore_icu,1)
+Fore_hos1 = lag(Fore_hos,1)
+Fore_vaccine1 = lag(Fore_vaccine,1)
+
+t=1:96
+Post_Vaccine$t = t
+Post_Vaccine2 = Post_Vaccine[1:91,]
+covidfit4_m4=lm(new_deaths_per_million~ t+ new_cases_per_million1+icu_patients_per_million1+hosp_patients_per_million1
+          +new_vaccinations_smoothed_per_million1, data = Post_Vaccine2)
+AIC(covidfit4_m4) #422.4621
+
+preds4 = predict(covidfit4_m4, newxreg = cbind(Fore_newcase1$f[1:5],Fore_icu1$f[1:5],Fore_hos1$f, Fore_vaccine1$f, Post_Vaccine$t[96:100]))
+ASE4 = mean((Post_Vaccine$new_deaths_per_million - preds4$ [1:5])^2)
+ASE4 #13.06587
+
+preds4$pred
+
+```
 
 
 
