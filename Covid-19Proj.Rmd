@@ -337,23 +337,98 @@ ASE4
 ```
 
 
+#### VAR MODEL 1 ####
 
 
 
+```{r pressure, echo=FALSE}
+
+VaccineVar1 = VAR(cbind(Post_Vaccine2$new_cases_per_million, Post_Vaccine2$new_deaths_per_million, Post_Vaccine2$icu_patients_per_million,Post_Vaccine2$hosp_patients_per_million, Post_Vaccine2$new_vaccinations_smoothed_per_million), type = 'both', lag.max = 5)
+AIC(VaccineVar1) #3084.604
+
+preds5 = predict(VaccineVar1, n.ahead = 5)
+
+ASE5 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds5$fcst$y2)^2)
+ASE5 #13.43509
+```
 
 
+#### VAR MODEL 2 ####
 
 
+```{r pressure, echo=FALSE}
+
+VaccineVar2 = VAR(cbind(Post_Vaccine2$new_cases_per_million, Post_Vaccine2$new_deaths_per_million, Post_Vaccine2$icu_patients_per_million,Post_Vaccine2$hosp_patients_per_million, Post_Vaccine2$new_vaccinations_smoothed_per_million), type = 'const', lag.max = 5)
+AIC(VaccineVar2) #3106.866
+
+preds6 = predict(VaccineVar2, n.ahead = 5)
+
+ASE6 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds6$fcst$y2)^2)
+ASE6 #11.37751
+```
 
 
+#### VAR MODEL 3 NEEDS ATTENTION ####
 
 
+```{r pressure, echo=FALSE}
+time = data.frame(time = seq(1,91,1))
+VaccineVar3 = VAR(cbind(Post_Vaccine2$new_cases_per_million, Post_Vaccine2$new_deaths_per_million, Post_Vaccine2$icu_patients_per_million,Post_Vaccine2$hosp_patients_per_million, Post_Vaccine2$new_vaccinations_smoothed_per_million), type = 'const', lag.max = 5, exogen = time)
+AIC(VaccineVar3) #3084.604
+
+preds7 = predict(VaccineVar3, n.ahead = 5) # NEEDS ATTENTION : Not Forecasting
+
+ASE6 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds6$fcst$y2)^2)
+ASE6 #11.37751
+```
+
+#### MLP With Vaccine Variable Only####
 
 
+```{r pressure, echo=FALSE}
+library(nnfor)
+library(forecast)
+library(vars)
+library(tswge)
+Vacc_Train = Post_Vaccine[1:91,]
+Vacc_Test = Post_Vaccine[92:96,]
+Vacc_xreg = data.frame(Vaccine = ts(Vacc_Train$new_vaccinations_smoothed_per_million))
+set.seed(2)
+Vacc_fit.mlp1 = mlp(ts(Vacc_Train$new_deaths_per_million) ,reps = 50,comb = "mean", xreg = Vacc_xreg ) #combine all 50 forcast
+Vacc_fit.mlp1 # 5 hnode #mse 1.11
+plot(Vacc_fit.mlp1)
+fore_vacc_df = data.frame(Vaccine = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
+Vacc_fore.mlp1 = forecast(Vacc_fit.mlp1, h = 6, xreg = fore_vacc_df) 
+plot(Vacc_fore.mlp1)
+MLP_ASE1 = mean((Vacc_Test$new_deaths_per_million- Vacc_fore.mlp1$mean)^2)
+MLP_ASE1 
+  
+
+```
 
 
+#### MLP With Vaccine Variable Only####
 
+```{r pressure, echo=FALSE}
+library(nnfor)
+library(forecast)
+library(vars)
+library(tswge)
+Vacc_Train = Post_Vaccine[1:91,]
+Vacc_Test = Post_Vaccine[92:96,]
+Vacc_xreg = data.frame(Vaccine = ts(Vacc_Train$new_vaccinations_smoothed_per_million))
+set.seed(2)
+Vacc_fit.mlp1 = mlp(ts(Vacc_Train$new_deaths_per_million) ,reps = 50,comb = "mean", xreg = Vacc_xreg ) #combine all 50 forcast
+Vacc_fit.mlp1 # 5 hnode #mse 1.11
+plot(Vacc_fit.mlp1)
+fore_vacc_df = data.frame(Vaccine = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
+Vacc_fore.mlp1 = forecast(Vacc_fit.mlp1, h = 6, xreg = fore_vacc_df) 
+plot(Vacc_fore.mlp1)
+MLP_ASE1 = mean((Vacc_Test$new_deaths_per_million- Vacc_fore.mlp1$mean)^2)
+MLP_ASE1 
+  
 
+```
 
 
 
