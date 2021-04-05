@@ -16,7 +16,31 @@ All_Covid <- read_csv("All_Covid.csv")
 
 Post_Vaccine <- read_csv("Post_Vaccine.csv")
 
-
+Rolling_Window_ASE = function(series, trainingSize, horizon, s, d, phis, thetas)
+{
+# trainingSize = 70
+# horizon = 12
+ASEHolder = numeric()
+# s = 10
+# d = 0
+# phis = phis
+# thetas = thetas
+for( i in 1:(length(series)-(trainingSize + horizon) + 1))
+{
+  forecasts = fore.aruma.wge(series[i:(i+(trainingSize-1))],phi = phis, theta = thetas, s = s, d = d,n.ahead = horizon)
+  ASE = mean((series[(trainingSize+i):(trainingSize+ i + (horizon) - 1)] - forecasts$f)^2)
+  ASEHolder[i] = ASE
+}
+ASEHolder
+hist(ASEHolder)
+WindowedASE = mean(ASEHolder)
+print(horizon)
+print(trainingSize)
+print("The Summary Statistics for the Rolling Window ASE Are:")
+print(summary(ASEHolder))
+print(paste("The Rolling Window ASE is: ",WindowedASE))
+return(WindowedASE)
+}
 ```
 
 
@@ -74,8 +98,8 @@ Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horiz
 
 
 ## Colored Plot for short term
-plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
-lines(seq(87,96,1),m3_forcast_short$f  , col = "red")
+plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,100), ylab = "Deaths Per Million", main = "6 day death rate forecast ")
+lines(seq(96,100,1), fore_m1_short$f, type = "l", col = "red")
 seq
 ## Colored Plot for long term
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,136))
@@ -189,16 +213,32 @@ fit2_m1=arima(Post_Vaccine2$new_deaths_per_million,order=c(9,0,0),xreg=cbind(Pos
 fit2_m1
 AIC(fit2_m1) #312.5972
 
-preds1 = predict(fit2_m1, newxreg = cbind(Post_Vaccine$new_cases_per_million[92:96], Post_Vaccine$icu_patients_per_million[92:96],Post_Vaccine$hosp_patients_per_million[92:96], Post_Vaccine$new_vaccinations_smoothed_per_million[92:96]))
-ASE1 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds1$pred)^2)
-ASE1 #2.491884
+#Pred for short term  
+preds1 = predict(fit2_m1, newxreg = cbind(Post_Vaccine$new_cases_per_million[91:96], Post_Vaccine$icu_patients_per_million[91:96],Post_Vaccine$hosp_patients_per_million[91:96], Post_Vaccine$new_vaccinations_smoothed_per_million[91:96]))
+preds1$pred
+ASE1 = mean((Post_Vaccine$new_deaths_per_million[91:96] - preds1$pred)^2)
+ASE1 #2.076967
 
+# Pred for long term
+preds_1 = predict(fit2_m1, newxreg = cbind(Post_Vaccine$new_cases_per_million[57:96], Post_Vaccine$icu_patients_per_million[57:96],Post_Vaccine$hosp_patients_per_million[57:96], Post_Vaccine$new_vaccinations_smoothed_per_million[57:96]))
+preds1$pred
+ASE_1 = mean((Post_Vaccine$new_deaths_per_million[57:96] - preds_1$pred)^2)
+ASE_1
 
-## Colored Plot for short term  NEEDS WORK
+#Rolling Window 
+Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 6, d = 0, phi = fit2_m1$phi, theta = 0,s= 0)
+
+## Colored forecast plot for last 6 days
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
-lines(seq(87,96,1),m4_forcast_short$f  , col = "red")
+lines(seq(91,96,1),preds1$pred, col = "red")
 
+## Colored forecast plot for short term
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,105))
+lines(seq(97,102,1),preds1$pred, col = "red")
 
+## Colored forecast plot for long term #NEED WORK
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,150))
+lines(seq(97,136,1),preds_1$pred, col = "red")
 
 ```
 
@@ -223,10 +263,34 @@ fit2_m2=arima(Post_Vaccine2$new_deaths_per_million,order=c(9,0,0),xreg=cbind(Pos
 fit2_m2
 AIC(fit2_m2) #312.5972
 
+#Rolling Window 
+Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 6, d = 0, phi = fit2_m2$phi, theta = 0,s= 0) #18.18726
+
 # Predictions with trend
-preds2 = predict(fit2_m2, newxreg = cbind(Post_Vaccine$new_cases_per_million[92:96], Post_Vaccine$icu_patients_per_million[92:96],Post_Vaccine$hosp_patients_per_million[92:96], Post_Vaccine$new_vaccinations_smoothed_per_million[92:96]))
-ASE2 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds2$pred)^2)
+preds2 = predict(fit2_m2, newxreg = cbind(Post_Vaccine$new_cases_per_million[91:96], Post_Vaccine$icu_patients_per_million[91:96],Post_Vaccine$hosp_patients_per_million[91:96], Post_Vaccine$new_vaccinations_smoothed_per_million[91:96]))
+ASE2 = mean((Post_Vaccine$new_deaths_per_million[91:96] - preds2$pred)^2)
 ASE2 #2.491884
+
+# Predictions with trend - long term
+preds_2 = predict(fit2_m2, newxreg = cbind(Post_Vaccine$new_cases_per_million[57:96], Post_Vaccine$icu_patients_per_million[57:96],Post_Vaccine$hosp_patients_per_million[57:96], Post_Vaccine$new_vaccinations_smoothed_per_million[57:96]))
+preds1$pred
+ASE_2 = mean((Post_Vaccine$new_deaths_per_million[57:96] - preds_2$pred)^2)
+ASE_2 #7.317226
+
+
+
+## Colored forecast plot for last 6 days
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
+lines(seq(91,96,1),preds2$pred, col = "red")
+
+## Colored forecast plot for short term
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,105))
+lines(seq(97,102,1),preds2$pred, col = "red")
+
+## Colored forecast plot for long term #NEED WORK
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,150))
+lines(seq(97,136,1),preds_2$pred, col = "red")
+
 
 ```
 
@@ -266,10 +330,33 @@ fit3_m3=arima(Post_Vaccine2$new_deaths_per_million,order=c(9,0,0),xreg=cbind(Pos
 fit3_m3
 AIC(fit3_m3) #321.61
 
-# Predictions with lags
-preds3 = predict(fit3_m3, newxreg = cbind(Post_Vaccine$new_cases_per_million[92:96], Post_Vaccine$icu_patients_per_million[92:96],Post_Vaccine$hosp_patients_per_million[92:96], Post_Vaccine$new_vaccinations_smoothed_per_million[92:96]))
-ASE3 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds3$pred)^2)
-ASE3 #3.652182
+#Rolling Window 
+Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 6, d = 0, phi = fit3_m3$phi, theta = 0,s= 0) #18.18726
+
+# Predictions with trend
+preds3 = predict(fit3_m3, newxreg = cbind(Post_Vaccine$new_cases_per_million[91:96], Post_Vaccine$icu_patients_per_million[91:96],Post_Vaccine$hosp_patients_per_million[91:96], Post_Vaccine$new_vaccinations_smoothed_per_million[91:96]))
+ASE3 = mean((Post_Vaccine$new_deaths_per_million[91:96] - preds2$pred)^2)
+ASE3 #3.045036
+
+# Predictions with trend - long term
+preds_3 = predict(fit3_m3, newxreg = cbind(Post_Vaccine$new_cases_per_million[57:96], Post_Vaccine$icu_patients_per_million[57:96],Post_Vaccine$hosp_patients_per_million[57:96], Post_Vaccine$new_vaccinations_smoothed_per_million[57:96]))
+preds1$pred
+ASE_3 = mean((Post_Vaccine$new_deaths_per_million[57:96] - preds_2$pred)^2)
+ASE_3 #6.512361
+
+
+
+## Colored forecast plot for last 6 days
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
+lines(seq(91,96,1),preds3$pred, col = "red")
+
+## Colored forecast plot for short term
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,105))
+lines(seq(97,102,1),preds3$pred, col = "red")
+
+## Colored forecast plot for long term #NEED WORK
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,150))
+lines(seq(97,136,1),preds_3$pred, col = "red")
 
 
 
@@ -329,10 +416,40 @@ covidfit4_m4=lm(new_deaths_per_million~ t+ new_cases_per_million1+icu_patients_p
           +new_vaccinations_smoothed_per_million1, data = Post_Vaccine2)
 AIC(covidfit4_m4) #422.4621
 
-# NEEDS ATTENTION
-preds4 = predict(covidfit4_m4, newxreg = cbind(Fore_newcase1$f[1:5],Fore_icu1$f[1:5],Fore_hos1$f, Fore_vaccine1$f, Post_Vaccine$t[96:100]))
-ASE4 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds4[1:5])^2)
-ASE4 
+M4_final_res=aic.wge(covidfit4_m4$residuals,p=0:10, q=0)  # AIC picks p=9
+fit4_m4=arima(Post_Vaccine2$new_deaths_per_million,order=c(8,0,0),xreg=cbind(Post_Vaccine2$new_cases_per_million1, Post_Vaccine2$icu_patients_per_million1,Post_Vaccine2$hosp_patients_per_million1, Post_Vaccine2$new_vaccinations_smoothed_per_million1))
+fit4_m4
+AIC(fit4_m4)
+
+#Rolling Window NOT WORKING
+Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 6, d = 0, phi = fit4_m4$, theta = fit4_m4$,s= 0) #18.18726
+
+# Predictions with trend
+preds4 = predict(fit4_m4, newxreg = cbind(Post_Vaccine$new_cases_per_million[91:96], Post_Vaccine$icu_patients_per_million[91:96],Post_Vaccine$hosp_patients_per_million[91:96], Post_Vaccine$new_vaccinations_smoothed_per_million[91:96]))
+ASE4 = mean((Post_Vaccine$new_deaths_per_million[91:96] - preds4$pred )^2)
+ASE4 #2.528183
+
+# Predictions with trend - long term
+preds_4 = predict(fit4_m4, newxreg = cbind(Post_Vaccine$new_cases_per_million[57:96], Post_Vaccine$icu_patients_per_million[57:96],Post_Vaccine$hosp_patients_per_million[57:96], Post_Vaccine$new_vaccinations_smoothed_per_million[57:96]))
+
+ASE_4 = mean((Post_Vaccine$new_deaths_per_million[57:96] - preds_4$pred)^2)
+ASE_4 #6.11206
+
+
+
+## Colored forecast plot for last 6 days
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
+lines(seq(91,96,1),preds4$pred, col = "red")
+
+## Colored forecast plot for short term
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,105))
+lines(seq(97,102,1),preds4$pred, col = "red")
+
+## Colored forecast plot for long term #NEED WORK
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,150))
+lines(seq(97,136,1),preds_4$pred, col = "red")
+
+
 
 ```
 
