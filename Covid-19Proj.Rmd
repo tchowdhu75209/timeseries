@@ -599,7 +599,22 @@ lines(seq(97,136,1),allexp_fore.m2p2$mean, col = "red")
 
 
 
+#### Ensemble Model with NN (all variables) Model and VAR 2####
 
+```{r pressure, echo=FALSE}
+
+ensemble  = (preds6$fcst$y2[,1] + allexp_fore.m2p1$mean)/2
+
+#Plot
+plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,96), ylab = "Death Rate Per Million", main = "Ensemble Model with NN (All Var) vs VAR 2 model")
+lines(seq(91,96,1), ensemble, type = "l", col = "green")
+
+ASE_en = mean((Post_Vaccine$new_deaths_per_million[91:96] - ensemble)^2)
+ASE_en #5.659218
+
+
+
+```
 
 
 
