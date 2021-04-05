@@ -499,6 +499,21 @@ preds_7 = predict(VaccineVar2, n.ahead = 40)
 
 ASE7 = mean((Post_Vaccine$new_deaths_per_million[91:96] - preds7$fcst$y2[,1])^2)
 ASE7 #2.584133
+
+#Rolling Window NOT WORKING
+Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 6, d = 0, phi = VaccineVar1$, theta = fit4_m4$,s= 0) #18.18726
+
+## Colored forecast plot for last 6 days
+plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,96), ylab = "Death Rate Per Million", main = "forecast plot for last 6 days")
+lines(seq(91,96), preds7$fcst$y2[,1], type = "l", col = "red")
+
+## Colored forecast plot for short term
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,105))
+lines(seq(97,102,1),preds7$fcst$y2[,1], col = "red")
+
+## Colored forecast plot for long term #NEED WORK
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,150))
+lines(seq(97,136,1),preds_7$fcst$y2[,1], col = "red")
 ```
 
 
@@ -510,20 +525,37 @@ library(nnfor)
 library(forecast)
 library(vars)
 library(tswge)
-Vacc_Train = Post_Vaccine[1:91,]
-Vacc_Test = Post_Vaccine[92:96,]
+Vacc_Train = Post_Vaccine[1:90,]
+Vacc_Test = Post_Vaccine[91:96,]
+Vacc_Train2 = Post_Vaccine[1:56,]
+Vacc_Test2 = Post_Vaccine[57:96,]
 Vacc_xreg = data.frame(Vaccine = ts(Vacc_Train$new_vaccinations_smoothed_per_million))
 set.seed(2)
-Vacc_fit.mlp1 = mlp(ts(Vacc_Train$new_deaths_per_million) ,reps = 50,comb = "mean", xreg = Vacc_xreg ) #combine all 50 forcast
+Vacc_fit.mlp1 = mlp(ts(Vacc_Train$new_deaths_per_million) ,reps = 50,comb = "mean", xreg = Vacc_xreg ) 
+Vacc_fit.mlp1_ = mlp(ts(Vacc_Train2$new_deaths_per_million) ,reps = 50,comb = "mean", xreg = Vacc_xreg ) #combine all 50 #combine all 50 forcast
 Vacc_fit.mlp1 # 5 hnode #mse 1.11
 plot(Vacc_fit.mlp1)
 fore_vacc_df_exp = data.frame(Vaccine = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
-Vacc_fore.mlp1 = forecast(Vacc_fit.mlp1, h = 5, xreg = fore_vacc_df) 
+Vacc_fore.mlp1 = forecast(Vacc_fit.mlp1, h = 6, xreg = fore_vacc_df) 
+Vacc_fore.mlp2 = forecast(Vacc_fit.mlp1_, h = 40, xreg = fore_vacc_df) 
 plot(Vacc_fore.mlp1)
 MLP_ASE1 = mean((Vacc_Test$new_deaths_per_million- Vacc_fore.mlp1$mean)^2)
-MLP_ASE1 #0.8900434
+MLP_ASE1 #2.030371
   
+#Rolling Window NOT WORKING
+Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 6, d = 0, phi = Vacc_fit.mlp1$, theta = Vacc_fit.mlp1,s= 0) #18.18726
 
+## Colored forecast plot for last 6 days
+plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,96), ylab = "Death Rate Per Million", main = "forecast plot for last 6 days")
+lines(seq(91,96), Vacc_fore.mlp1$mean, type = "l", col = "red")
+
+## Colored forecast plot for short term
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,105))
+lines(seq(97,102,1),Vacc_fore.mlp1$mean, col = "red")
+
+## Colored forecast plot for long term #NEED WORK
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,150))
+lines(seq(97,136,1),Vacc_fore.mlp2$mean, col = "red")
 ```
 
 
