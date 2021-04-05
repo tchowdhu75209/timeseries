@@ -463,14 +463,30 @@ lines(seq(97,136,1),preds_4$pred, col = "red")
 VaccineVar1 = VAR(cbind(Post_Vaccine2$new_cases_per_million, Post_Vaccine2$new_deaths_per_million, Post_Vaccine2$icu_patients_per_million,Post_Vaccine2$hosp_patients_per_million, Post_Vaccine2$new_vaccinations_smoothed_per_million), type = 'both', lag.max = 5)
 AIC(VaccineVar1) #3084.604
 
-preds5 = predict(VaccineVar1, n.ahead = 5)
+preds6 = predict(VaccineVar1, n.ahead = 6)
+preds_6 = predict(VaccineVar1, n.ahead = 40)
+ASE5 = mean((Post_Vaccine$new_deaths_per_million[91:96] - preds6$fcst$y2[,1])^2)
+ASE5 #11.84746
 
-ASE5 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds5$fcst$y2)^2)
-ASE5 #13.43509
+#Rolling Window NOT WORKING
+Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 6, d = 0, phi = VaccineVar1$, theta = fit4_m4$,s= 0) #18.18726
+
+## Colored forecast plot for last 6 days
+plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,96), ylab = "Death Rate Per Million", main = "forecast plot for last 6 days")
+lines(seq(91,96), preds6$fcst$y2[,1], type = "l", col = "red")
+
+## Colored forecast plot for short term
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,105))
+lines(seq(97,102,1),preds6$fcst$y2[,1], col = "red")
+
+## Colored forecast plot for long term #NEED WORK
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,150))
+lines(seq(97,136,1),preds_6$fcst$y2[,1], col = "red")
+
 ```
 
 
-#### VAR MODEL 2 ####
+#### VAR MODEL 2 - const####
 
 
 ```{r pressure, echo=FALSE}
@@ -478,26 +494,13 @@ ASE5 #13.43509
 VaccineVar2 = VAR(cbind(Post_Vaccine2$new_cases_per_million, Post_Vaccine2$new_deaths_per_million, Post_Vaccine2$icu_patients_per_million,Post_Vaccine2$hosp_patients_per_million, Post_Vaccine2$new_vaccinations_smoothed_per_million), type = 'const', lag.max = 5)
 AIC(VaccineVar2) #3106.866
 
-preds6 = predict(VaccineVar2, n.ahead = 5)
+preds7 = predict(VaccineVar2, n.ahead = 6)
+preds_7 = predict(VaccineVar2, n.ahead = 40)
 
-ASE6 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds6$fcst$y2)^2)
-ASE6 #11.37751
+ASE7 = mean((Post_Vaccine$new_deaths_per_million[91:96] - preds7$fcst$y2[,1])^2)
+ASE7 #2.584133
 ```
 
-
-#### VAR MODEL 3 NEEDS ATTENTION ####
-
-
-```{r pressure, echo=FALSE}
-time = data.frame(time = seq(1,91,1))
-VaccineVar3 = VAR(cbind(Post_Vaccine2$new_cases_per_million, Post_Vaccine2$new_deaths_per_million, Post_Vaccine2$icu_patients_per_million,Post_Vaccine2$hosp_patients_per_million, Post_Vaccine2$new_vaccinations_smoothed_per_million), type = 'const', lag.max = 5, exogen = time)
-AIC(VaccineVar3) #3084.604
-
-preds7 = predict(VaccineVar3, n.ahead = 5) # NEEDS ATTENTION : Not Forecasting
-
-ASE6 = mean((Post_Vaccine$new_deaths_per_million[92:96] - preds6$fcst$y2)^2)
-ASE6 #11.37751
-```
 
 #### MLP With Vaccine Variable Only####
 
