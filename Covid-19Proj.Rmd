@@ -558,7 +558,7 @@ plot(fore.mlp1)
 
 ## Forecast for next 40 days
 vacc_fit.mlp2 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50, comb = "mean")
-fore.vacc2 = forecast(vacc_fit.mlp1, h = 49)
+fore.vacc2 = forecast(vacc_fit.mlp1, h = 40)
 
 vacc_fore2 = data.frame(Vaccine2 = ts(fore.vacc2$mean))
 vacc_fore2
@@ -569,6 +569,8 @@ plot(fit.mlp1)
 VCDF2 = data.frame(VC = ts(c(Vacc_xreg_all$Vaccine_all,vacc_fore2$Vaccine2)))
 fore.mlp2 = forecast(fit.mlp1, h = 40, xreg = VCDF2)
 plot(fore.mlp2)
+
+
 ```
 
 
@@ -606,6 +608,62 @@ lines(seq(91,96), allexp_fore.m2p1$mean, type = "l", col = "red")
 ## Forecast plot for last 40 days
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
 lines(seq(57,96,1),allexp_fore.m2p2$mean, col = "red")
+
+## Forecast for next 6 days
+
+All_Var = data.frame(Vaccine = ts(Post_Vaccine$new_vaccinations_smoothed_per_million), NewCase = ts(Post_Vaccine$new_cases_per_million), Hosp = ts(Post_Vaccine$hosp_patients_per_million), ICU = ts(Post_Vaccine$icu_patients_per_million))
+
+fit.mlp2 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50,comb = "mean",xreg = All_Var)
+fit.mlp2 #0.3717
+plot(fit.mlp2)
+
+#New Case
+fit.mlp.NC = mlp(ts(Post_Vaccine$new_cases_per_million),reps = 50,comb = "mean")
+fore.mlp2.6.NC = forecast(fit.mlp.NC, h = 6)
+NCvar_DF_fore = data.frame(NC= ts(fore.mlp2.6.NC$mean))
+NCvar_DF_fore
+
+#New Vacc
+fit.mlp.NV = mlp(ts(Post_Vaccine$new_vaccinations_smoothed_per_million),reps = 50,comb = "mean")
+fore.mlp2.6.NV = forecast(fit.mlp.NV, h = 6)
+NVvar_DF_fore = data.frame(NV= ts(fore.mlp2.6.NV$mean))
+NVvar_DF_fore
+
+#New Hos
+fit.mlp.HS = mlp(ts(Post_Vaccine$hosp_patients_per_million),reps = 50,comb = "mean")
+fore.mlp2.6.HS = forecast(fit.mlp.HS, h = 6)
+HSvar_DF_fore = data.frame(HS= ts(fore.mlp2.6.HS$mean))
+HSvar_DF_fore
+
+#New ICU
+fit.mlp.IC = mlp(ts(Post_Vaccine$icu_patients_per_million),reps = 50,comb = "mean")
+fore.mlp2.6.IC = forecast(fit.mlp.IC, h = 6)
+ICvar_DF_fore = data.frame(IC= ts(fore.mlp2.6.IC$mean))
+ICvar_DF_fore
+
+#Final Step for Plott
+AllVarDF = data.frame(AllV = ts(c(All_Var$NewCase, All_Var$Vaccine,All_Var$Hosp, All_Var$ICU,NCvar_DF_fore$NC,NVvar_DF_fore$NV,HSvar_DF_fore$HS,ICvar_DF_fore$IC)))
+fore.mlp2_f = forecast(fit.mlp2, h = 6, xreg = AllVarDF)
+plot(fore.mlp2_f)
+
+
+
+
+
+## Forecast for next 40 days - If the 6 day forecast gets fixed then I can fix this one.
+vacc_fit.mlp2 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50, comb = "mean")
+fore.vacc2 = forecast(vacc_fit.mlp1, h = 49)
+
+vacc_fore2 = data.frame(Vaccine2 = ts(fore.vacc2$mean))
+vacc_fore2
+Vacc_xreg_all = data.frame(Vaccine_all = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
+fit.mlp1 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50,comb = "mean",xreg = Vacc_xreg_all)
+fit.mlp1
+plot(fit.mlp1)
+VCDF2 = data.frame(VC = ts(c(Vacc_xreg_all$Vaccine_all,vacc_fore2$Vaccine2)))
+fore.mlp2 = forecast(fit.mlp1, h = 40, xreg = VCDF2)
+plot(fore.mlp2)
+
 
 ```
 
