@@ -542,7 +542,33 @@ lines(seq(91,96), Vacc_fore.mlp1$mean, type = "l", col = "red")
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
 lines(seq(57,96,1),Vacc_fore.mlp2$mean, col = "red")
 
+## Forecast for next 6 days
+vacc_fit.mlp1 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50, comb = "mean")
+fore.vacc = forecast(vacc_fit.mlp1, h = 6)
 
+vacc_fore = data.frame(Vaccine = ts(fore.vacc$mean))
+vacc_fore
+Vacc_xreg_all = data.frame(Vaccine_all = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
+fit.mlp1 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50,comb = "mean",xreg = Vacc_xreg_all)
+fit.mlp1
+plot(fit.mlp1)
+VCDF = data.frame(VC = ts(c(Vacc_xreg_all$Vaccine_all,vacc_fore$Vaccine)))
+fore.mlp1 = forecast(fit.mlp1, h = 6, xreg = VCDF)
+plot(fore.mlp1)
+
+## Forecast for next 40 days
+vacc_fit.mlp2 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50, comb = "mean")
+fore.vacc2 = forecast(vacc_fit.mlp1, h = 49)
+
+vacc_fore2 = data.frame(Vaccine2 = ts(fore.vacc2$mean))
+vacc_fore2
+Vacc_xreg_all = data.frame(Vaccine_all = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
+fit.mlp1 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50,comb = "mean",xreg = Vacc_xreg_all)
+fit.mlp1
+plot(fit.mlp1)
+VCDF2 = data.frame(VC = ts(c(Vacc_xreg_all$Vaccine_all,vacc_fore2$Vaccine2)))
+fore.mlp2 = forecast(fit.mlp1, h = 40, xreg = VCDF2)
+plot(fore.mlp2)
 ```
 
 
