@@ -223,18 +223,35 @@ preds_1 = predict(fit2_m1, newxreg = cbind(Post_Vaccine$new_cases_per_million[57
 ASE_1_long = mean((Post_Vaccine$new_deaths_per_million[57:96] - preds_1$pred)^2)
 ASE_1_long #7.317226
 
-#Rolling Window 
-Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 6, d = 0, phi = fit2_m1$phi, theta = 0,s= 0)
+#Pred for next 6 days
 
-## Colored forecast plot for last 6 days
+m1_fit = lm(Post_Vaccine$new_deaths_per_million~Post_Vaccine$new_cases_per_million+Post_Vaccine$new_vaccinations_smoothed_per_million+Post_Vaccine$hosp_patients_per_million+Post_Vaccine$icu_patients_per_million)
+
+phi = aic.wge(m1_fit$residuals)
+m1_resids = fore.arma.wge(m1_fit$residuals, phi = phi$phi, n.ahead = 6)
+Pred_nc_6_m1 = fore.aruma.wge(Post_Vaccine$new_cases_per_million, n.ahead = 6)
+Pred_nv_6_m1 = fore.aruma.wge(Post_Vaccine$new_vaccinations_smoothed_per_million, n.ahead = 6)
+Pred_hs_6_m1 = fore.aruma.wge(Post_Vaccine$icu_patients_per_million, n.ahead = 6)
+Pred_ic_6_m1 = fore.aruma.wge(Post_Vaccine$icu_patients_per_million, n.ahead = 6)
+next6_m1 = data.frame(NC = Pred_nc_6_m1$f, NV = Pred_nv_6_m1$f,HS = Pred_hs_6_m1$f,IC = Pred_ic_6_m1$f)
+#get predictions
+preds_m1_6 = predict(m1_fit,newxreg = next6_m1) #creates error because of factor
+Preds_m1_6_final = preds_m1_6 + m1_resids$f
+
+#Rolling Window 
+Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 6, d = 0, phi = fit2_m1$phi, theta = 0,s= 0) #18.18726
+
+## Forecast plot for last 6 days
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
 lines(seq(91,96,1),preds1$pred, col = "red")
 
-## Colored forecast plot for past 40 days
+## Forecast plot for last 40 days
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
 lines(seq(57,96,1),preds_1$pred, col = "red")
 
-
+## Forecast plot for next 6 days
+plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,102), ylab = "New Death Rate Per Million", main = "New Death Per Million forecast for next 6 days")
+lines(seq(97,102,1), Preds_m1_6_final, type = "l", col = "red")
 
 ```
 
