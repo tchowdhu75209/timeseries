@@ -233,10 +233,17 @@ Pred_nc_6_m1 = fore.aruma.wge(Post_Vaccine$new_cases_per_million, n.ahead = 6)
 Pred_nv_6_m1 = fore.aruma.wge(Post_Vaccine$new_vaccinations_smoothed_per_million, n.ahead = 6)
 Pred_hs_6_m1 = fore.aruma.wge(Post_Vaccine$hosp_patients_per_million, n.ahead = 6)
 Pred_ic_6_m1 = fore.aruma.wge(Post_Vaccine$icu_patients_per_million, n.ahead = 6)
-next6_m1 = data.frame(NC = Pred_nc_6_m1$f, NV = Pred_nv_6_m1$f,HS = Pred_hs_6_m1$f,IC = Pred_ic_6_m1$f)
+next6_m1 = data.frame(new_cases_per_million=Pred_nc_6_m1$f, new_vaccinations_smoothed_per_million=Pred_nv_6_m1$f,hosp_patients_per_million=Pred_hs_6_m1$f,icu_patients_per_million=Pred_ic_6_m1$f)
 #get predictions
-preds_m1_6 = predict(m1_fit, newxreg = next6_m1) 
+preds_m1_6 = predict(m1_fit, newdata = next6_m1) 
 Preds_m1_6_final = preds_m1_6 + m1_resids$f
+
+## Forecast plot for next 6 days
+plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,102), ylab = "New Death Rate Per Million", main = "New Death Per Million forecast for next 6 days")
+lines(seq(97,102,1), Preds_m1_6_final, type = "l", col = "red")
+
+
+
 
 #Pred for next 40 days
 
@@ -252,6 +259,8 @@ next40_m1 = data.frame(NC = Pred_nc_40_m1$f, NV = Pred_nv_40_m1$f,HS = Pred_hs_4
 #get predictions
 preds_m1_40 = predict(m2_fit, newxreg = next40_m1) 
 Preds_m1_40_final = preds_m1_40 + m2_resids$f
+
+
 
 
 #Rolling Window 
