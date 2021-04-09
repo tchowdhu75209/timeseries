@@ -300,39 +300,11 @@ lines(seq(97,136,1),Preds_m1_40_final, col = "red")
 
 
 
-#### VAR MODEL 1 ####
+#### VAR MODEL 1 with no lagged variables ####
 
 
 
 ```{r pressure, echo=FALSE}
-
-Post_Vaccine2 = Post_Vaccine[1:91,]
-Post_Vaccine2_long = Post_Vaccine[1:56,]
-
-VaccineVar1 = VAR(cbind(Post_Vaccine2$new_cases_per_million, Post_Vaccine2$new_deaths_per_million, Post_Vaccine2$icu_patients_per_million,Post_Vaccine2$hosp_patients_per_million, Post_Vaccine2$new_vaccinations_smoothed_per_million), type = 'both', lag.max = 5)
-AIC(VaccineVar1) #3084.604
-
-VaccineVar1_long = VAR(cbind(Post_Vaccine2_long$new_cases_per_million, Post_Vaccine2_long$new_deaths_per_million, Post_Vaccine2_long$icu_patients_per_million,Post_Vaccine2_long$hosp_patients_per_million, Post_Vaccine2_long$new_vaccinations_smoothed_per_million), type = 'both', lag.max = 5)
-AIC(VaccineVar1_long) #1729.743
-
-preds6 = predict(VaccineVar1, n.ahead = 6)
-preds_6 = predict(VaccineVar1_long, n.ahead = 40)
-ASE5_short = mean((Post_Vaccine$new_deaths_per_million[91:96] - preds6$fcst$y2[,1])^2)
-ASE5 #11.84746
-ASE5_long = mean((Post_Vaccine$new_deaths_per_million[57:96] - preds_6$fcst$y2[,1])^2)
-ASE5 #11.84746
-
-## Colored forecast plot for last 6 days
-plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,96), ylab = "Death Rate Per Million", main = "forecast plot for last 6 days")
-lines(seq(91,96), preds6$fcst$y2[,1], type = "l", col = "red")
-
-## Colored forecast plot for last 40 days 
-plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96),ylab = "Death Rate Per Million")
-lines(seq(57,96,1),preds_6$fcst$y2[,1], col = "red")
-
-#############################
-## Simer's part: VAR Model 1
-#############################
 
 PVsmall = Post_Vaccine[1:80,]
 VAR_PV = VAR(cbind(PVsmall$new_deaths_per_million,PVsmall$new_cases_per_million,PVsmall$icu_patients_per_million,PVsmall$hosp_patients_per_million,PVsmall$new_vaccinations_smoothed_per_million),lag.max = 8, type = "both")
@@ -348,62 +320,17 @@ pred_40 = predict(VAR_PV,n.ahead = 56)
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,136), ylab = "new_deaths_per_million", main = "Next 40 day new_deaths_per_million Forecast")
 lines(seq(97,136,1),tail(pred_40$fcst$y1[,1],40), col = "red")
 
-#####lagged icu_1, hosp_1######
-VAR_PV = VAR(cbind(PVsmall$new_deaths_per_million[2:80],PVsmall$new_cases_per_million[2:80],PVsmall$icu_patients_per_million_1[2:80],PVsmall$hosp_patients_per_million_1[2:80],PVsmall$new_vaccinations_smoothed_per_million[2:80]),lag.max = 8, type = "both")
-pred = predict(VAR_PV,n.ahead = 16)
-plot(Post_Vaccine$new_deaths_per_million, type = "l")
-lines(seq(81,96,1),pred$fcst$y1[,1],col = "red")
-ASE = mean((Post_Vaccine$new_deaths_per_million[81:96] - pred$fcst$y1[1:16])^2)
-ASE #1.91
-pred = predict(VAR_PV,n.ahead = 40)
-plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,120),ylab = "new_deaths_per_million", main = "Next 120 day new_deaths_per_million Forecast")
-lines(seq(97,120,1),tail(pred$fcst$y1[,1],24), col = "red")
-#Model entire data
-VAR_PV = VAR(cbind(Post_Vaccine$new_deaths_per_million[2:96],Post_Vaccine$new_cases_per_million[2:96],Post_Vaccine$icu_patients_per_million_1[2:96],Post_Vaccine$hosp_patients_per_million_1[2:96],Post_Vaccine$new_vaccinations_smoothed_per_million[2:96]),lag.max = 8, type = "both", p=1)
-pred = predict(VAR_PV,n.ahead = 24)
-plot(Post_Vaccine$new_deaths_per_million, type = "l", xlim = c(1,125))
-lines(seq(97,120,1),pred$fcst$y1[,1],col = "red")
-pred = predict(VAR_PV,n.ahead = 44)
-plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,160),ylab = "new_deaths_per_million", main = "Next 120 day new_deaths_per_million Forecast")
-lines(seq(97,140,1),pred$fcst$y1[,1], col = "red")
+
 
 
 ```
 
 
-#### VAR MODEL 2 - const####
+#### VAR MODEL 2 - with lagged variables (Hospital and ICU) ###
 
 
 ```{r pressure, echo=FALSE}
 
-VaccineVar2_short = VAR(cbind(Post_Vaccine2$new_cases_per_million, Post_Vaccine2$new_deaths_per_million, Post_Vaccine2$icu_patients_per_million,Post_Vaccine2$hosp_patients_per_million, Post_Vaccine2$new_vaccinations_smoothed_per_million), type = 'const', lag.max = 5)
-AIC(VaccineVar2_short) #3104.65
-
-VaccineVar2_long = VAR(cbind(Post_Vaccine2_long$new_cases_per_million, Post_Vaccine2_long$new_deaths_per_million, Post_Vaccine2_long$icu_patients_per_million,Post_Vaccine2_long$hosp_patients_per_million, Post_Vaccine2_long$new_vaccinations_smoothed_per_million), type = 'const', lag.max = 5)
-AIC(VaccineVar2_long) #1737.859
-
-
-
-
-preds7_6days = predict(VaccineVar2_short, n.ahead = 6)
-preds_7_40days = predict(VaccineVar2_long, n.ahead = 40)
-
-ASE7_short = mean((Post_Vaccine$new_deaths_per_million[91:96] - preds7_6days$fcst$y2[,1])^2)
-ASE7_short #3.967338
-ASE7_long = mean((Post_Vaccine$new_deaths_per_million[57:96] - preds_7_40days$fcst$y2[,1])^2)
-ASE7_long #7.514837
-
-## Colored forecast plot for last 6 days
-plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,96), ylab = "Death Rate Per Million", main = "forecast plot for last 6 days")
-lines(seq(91,96), preds7$fcst$y2[,1], type = "l", col = "red")
-
-## Colored forecast plot for last 40 days
-plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
-lines(seq(57,96,1),preds_7_40days$fcst$y2[,1], col = "red")
-
-###############################
-## Simer's part: VAR model # 2
-###############################
 #####lagged icu_1, hosp_1######
 VAR_PV = VAR(cbind(PVsmall$new_deaths_per_million[2:80],PVsmall$new_cases_per_million[2:80],PVsmall$icu_patients_per_million_1[2:80],PVsmall$hosp_patients_per_million_1[2:80],PVsmall$new_vaccinations_smoothed_per_million[2:80]),lag.max = 8, type = "both")
 pred = predict(VAR_PV,n.ahead = 16)
@@ -420,17 +347,17 @@ plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,136
 lines(seq(97,136,1),tail(pred_40$fcst$y1[,1],40), col = "red")
 
 
-#Model entire data
+#Model entire data for future forecasting
 VAR_PV_full = VAR(cbind(Post_Vaccine$new_deaths_per_million[2:96],Post_Vaccine$new_cases_per_million[2:96],Post_Vaccine$icu_patients_per_million_1[2:96],Post_Vaccine$hosp_patients_per_million_1[2:96],Post_Vaccine$new_vaccinations_smoothed_per_million[2:96]),lag.max = 8, type = "both")
 pred_14 = predict(VAR_PV_full,n.ahead = 30)
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,110),ylab = "new_deaths_per_million", main = "Next 14 day new_deaths_per_million Forecast")
 lines(seq(97,110,1),tail(pred_14$fcst$y1[,1],14), col = "red")
 
-pred_40 = predict(VAR_PV_full,n.ahead = 56)
+pred_40 = predict(VAR_PV_full,n.ahead = 56) 
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,136),ylab = "new_deaths_per_million", main = "Next 40 day new_deaths_per_million Forecast")
 lines(seq(97,136,1),tail(pred_40$fcst$y1[,1],40), col = "red")
 
-
+## We will proceed with Model 2 - with lagged variables ##
 ```
 
 
