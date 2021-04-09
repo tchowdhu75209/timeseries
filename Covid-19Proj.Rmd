@@ -171,113 +171,132 @@ lines(seq(87,96,1),m4_forcast_short$f  , col = "red")
 
 #### Multivariate  (No Trend/lag) ####
 
-```{r pressure, echo=FALSE}
-# Explanatory Variable
-expvar_vaccine = data.frame(Post_Vaccine$new_cases_per_million, Post_Vaccine$icu_patients_per_million,
-                         Post_Vaccine$hosp_patients_per_million,Post_Vaccine$new_vaccinations_smoothed_per_million)
-
-# All data with no lag and no trend
-covfit1=lm(new_deaths_per_million~ new_cases_per_million+icu_patients_per_million+hosp_patients_per_million
-          +new_vaccinations_smoothed_per_million, data = Post_Vaccine)
-AIC(covfit1)#425.1261
-summary(covfit1) # new_vaccinations_smoothed_per_million  2.213e-05  2.587e-04   0.086    0.932 
-
-deathrate_res= is.numeric(aic.wge(covfit1$residuals,p=0:10, q=0))  # AIC picks p=9
-
-acf(covfit1$residuals)
-
-fit1=arima(Post_Vaccine$new_deaths_per_million,order=c(9,0,0),xreg=expvar_vaccine)
-fit1
-AIC(fit1) #322.8156
-
-acf(fit1$residuals) # looks like white noise behavior
-ltest = ljung.wge(fit$resid)
-ltest$pval
-M1_final_res=aic.wge(fit1i$residuals,p=0:10, q=0)
-
-# ASE for model with no lag and no trend (last 5)
-Post_Vaccine2 = Post_Vaccine[1:91,]
-
-expvar_vaccine2 = data.frame(Post_Vaccine2$new_cases_per_million, Post_Vaccine2$icu_patients_per_million,
-                         Post_Vaccine2$hosp_patients_per_million,Post_Vaccine2$new_vaccinations_smoothed_per_million)
-
-covidfit2_mi=lm(new_deaths_per_million~ new_cases_per_million+icu_patients_per_million+hosp_patients_per_million
-          +new_vaccinations_smoothed_per_million, data = Post_Vaccine2)
-AIC(covidfit2_mi) #402.4385
-
-M1_final_res=aic.wge(covidfit2_mi$residuals,p=0:10, q=0)  # AIC picks p=9
-fit2_m1=arima(Post_Vaccine2$new_deaths_per_million,order=c(9,0,0),xreg=cbind(Post_Vaccine2$new_cases_per_million, Post_Vaccine2$icu_patients_per_million,Post_Vaccine2$hosp_patients_per_million, Post_Vaccine2$new_vaccinations_smoothed_per_million))
-fit2_m1
-AIC(fit2_m1) #312.5972
-
-#Pred for past 6 days 
-preds1 = predict(fit1, newxreg = cbind(Post_Vaccine$new_cases_per_million[83:96], Post_Vaccine$icu_patients_per_million[83:96],Post_Vaccine$hosp_patients_per_million[83:96], Post_Vaccine$new_vaccinations_smoothed_per_million[91:96]))
-
-ASE1_short = mean((Post_Vaccine$new_deaths_per_million[91:96] - preds1$pred)^2)
-ASE1_short #2.076967
-
-# Pred for past 40 days
-preds_1 = predict(fit1, newxreg = cbind(Post_Vaccine$new_cases_per_million[57:96], Post_Vaccine$icu_patients_per_million[57:96],Post_Vaccine$hosp_patients_per_million[57:96], Post_Vaccine$new_vaccinations_smoothed_per_million[57:96]))
-
-ASE_1_long = mean((Post_Vaccine$new_deaths_per_million[57:96] - preds_1$pred)^2)
-ASE_1_long #7.317226
-
-#Pred for next 6 days
-
+```{r}
+#Multivariate - Model 1 - No trend and no lags
+PVsmall = Post_Vaccine[1:80,]
+mv_fit1 <- lm( new_deaths_per_million~ new_cases_per_million+ icu_patients_per_million+hosp_patients_per_million+new_vaccinations_smoothed_per_million  ,data = PVsmall)
+aic.wge(mv_fit1$residuals, p=0:8,q=0) #AIC picks 7,0 ; aic =0.8019881
+fit1 = arima(PVsmall$new_deaths_per_million, order=c(7,0,0), xreg = PVsmall[,c(3,5,6,7)] )
+fit1 #AIC 281.45; Only new_cases_per_million looks significant
+acf(fit1$residuals) #appear to be white noise
+#ljung test for white noise of residuals
+ltest = ljung.wge(fit1$residuals) #null hypothesis = white noise, alternate- not white noise. pval = 0.975. Here we FTR null hypothesis, so this is white noise
+ltest
+#Forecast model 1
+preds_mv1 = predict(fit1, newxreg = cbind(Post_Vaccine$new_cases_per_million[81:96], Post_Vaccine$icu_patients_per_million[81:96],Post_Vaccine$hosp_patients_per_million[81:96],Post_Vaccine$new_vaccinations_smoothed_per_million[81:96]))
+ASE_mv1 = mean((Post_Vaccine$new_deaths_per_million[81:96] - preds_mv1$pred)^2)
+ASE_mv1 #2.59
+#Multivariate - No trend and no lags with only new_cases_per_million
+mv_fit1_2 <- lm( new_deaths_per_million~ new_cases_per_million  ,data = PVsmall)
+aic.wge(mv_fit1_2$residuals, p=0:8,q=0) #AIC picks 7,0 ; aic =0.471746
+fit1_2 = arima(PVsmall$new_deaths_per_million, order=c(7,0,0), xreg = PVsmall[,c(3)] )
+fit1_2 #AIC 281.45; Only new_cases_per_million looks significant
+acf(fit1_2$residuals) #appear to be white noise
+#ljung test for white noise of residuals
+ltest = ljung.wge(fit1_2$residuals) #null hypothesis = white noise, alternate- not white noise. pval = 0.975. Here we FTR null hypothesis, so this is white noise
+ltest
+#Forecast model 1_2
+preds_mv1_2 = predict(fit1_2, newxreg = cbind(Post_Vaccine$new_cases_per_million[81:96]  ))
+ASE_mv1_2 = mean((Post_Vaccine$new_deaths_per_million[81:96] - preds_mv1_2$pred)^2)
+ASE_mv1_2 #3.736719
+#Model 1 - No trend and no lags has the best ASE so far.
+#Multivariate - Model 2 - Trend but  no lags
+t = seq(1:96)
+mv_fit2 <- lm( new_deaths_per_million~ t[1:80]+new_cases_per_million+ icu_patients_per_million+hosp_patients_per_million+new_vaccinations_smoothed_per_million  ,data = PVsmall)
+aic.wge(mv_fit2$residuals, p=0:8,q=0) #AIC picks 7,0, aic = 0.6252096
+fit2 = arima(PVsmall$new_deaths_per_million, order=c(7,0,0), xreg = cbind(t[1:80],PVsmall[,c(3,5,6,7)]) )
+fit2 #AIC aic = 274.31; time, hosp_patients_per_million looks insignificant,
+acf(fit2$residuals) #appear to be white noise
+#ljung test for white noise of residuals
+ltest2 = ljung.wge(fit2$residuals) #null hypothesis = white noise, alternate- not white noise. pval = 0.975. Here we FTR null hypothesis, so this is white noise
+ltest2
+#Forecast model 2
+preds_mv2 = predict(fit2, newxreg = cbind(t[81:96], Post_Vaccine$new_cases_per_million[81:96], Post_Vaccine$icu_patients_per_million[81:96],Post_Vaccine$hosp_patients_per_million[81:96],Post_Vaccine$new_vaccinations_smoothed_per_million[81:96]))
+ASE_mv2 = mean((Post_Vaccine$new_deaths_per_million[81:96] - preds_mv2$pred)^2)
+ASE_mv2 #5.407704
+#Take hosp_patients_per_million out
+mv_fit2_1 <- lm( new_deaths_per_million~ t[1:80]+new_cases_per_million+ icu_patients_per_million +new_vaccinations_smoothed_per_million  ,data = PVsmall)
+aic.wge(mv_fit2_1$residuals, p=0:8,q=0) #AIC picks 7,0, aic = 0.6189045
+fit2_1 = arima(PVsmall$new_deaths_per_million, order=c(7,0,0), xreg = cbind(t[1:80],PVsmall[,c(3,5,7)]) )
+fit2_1 #AIC aic = 274.31; time, new_vaccinations_smoothed_per_million looks insignificant
+#Forecast model 2_1
+preds_mv2_1 = predict(fit2_1, newxreg = cbind(t[81:96], Post_Vaccine$new_cases_per_million[81:96], Post_Vaccine$icu_patients_per_million[81:96],Post_Vaccine$new_vaccinations_smoothed_per_million[81:96]  ))
+ASE_mv2_1 = mean((Post_Vaccine$new_deaths_per_million[81:96] - preds_mv2_1$pred)^2)
+ASE_mv2_1  #6.364181
+#Take new_vaccinations_smoothed_per_million out
+mv_fit2_2 <- lm( new_deaths_per_million~ t[1:80]+new_cases_per_million+ icu_patients_per_million   ,data = PVsmall)
+aic.wge(mv_fit2_2$residuals, p=0:8,q=0) #AIC picks 7,0, aic = 0.5544063
+fit2_2 = arima(PVsmall$new_deaths_per_million, order=c(7,0,0), xreg = cbind(t[1:80],PVsmall[,c(3,5)]))
+fit2_2 #AIC aic = 275.97; time, AIC increased a little bit
+acf(fit2_2$residuals) #appear to be white noise
+#ljung test for white noise of residuals
+ltest2_2 = ljung.wge(fit2_2$residuals) #null hypothesis = white noise, alternate- not white noise. pval = 0.975. Here we FTR null hypothesis, so this is white noise
+ltest2_2
+#Forecast model 2_1
+preds_mv2_2 = predict(fit2_2, newxreg = cbind(t[81:96], Post_Vaccine$new_cases_per_million[81:96], Post_Vaccine$icu_patients_per_million[81:96]))
+ASE_mv2_2 = mean((Post_Vaccine$new_deaths_per_million[81:96] - preds_mv2_2$pred)^2)
+ASE_mv2_2  #6.53061 No improvememnt
+#Model 1 - No trend and no lags has the best ASE so far.
+#Multivariate - Model 2 - Trend and lags
+#Lagged variables - all
+ccf(Post_Vaccine$new_cases_per_million,Post_Vaccine$new_deaths_per_million) #7
+ccf(Post_Vaccine$icu_patients_per_million,Post_Vaccine$new_deaths_per_million) #1
+ccf(Post_Vaccine$hosp_patients_per_million,Post_Vaccine$new_deaths_per_million) #1
+ccf(Post_Vaccine$new_vaccinations_smoothed_per_million,Post_Vaccine$new_deaths_per_million) #8
+Post_Vaccine$new_cases_per_million_7 <- dplyr::lag(Post_Vaccine$new_cases_per_million,7)
+Post_Vaccine$icu_patients_per_million_1 <- dplyr::lag(Post_Vaccine$icu_patients_per_million,1)
+Post_Vaccine$hosp_patients_per_million_1 <- dplyr::lag(Post_Vaccine$hosp_patients_per_million,1)
+Post_Vaccine$new_vaccinations_smoothed_per_million_8 <- dplyr::lag(Post_Vaccine$new_vaccinations_smoothed_per_million,8)
+PVsmall = Post_Vaccine[1:80,]
+mv_fit3 <- lm( new_deaths_per_million~ t[1:80]+new_cases_per_million_7+ icu_patients_per_million_1+hosp_patients_per_million_1+new_vaccinations_smoothed_per_million_8  ,data = PVsmall)
+aic.wge(mv_fit3$residuals, p=0:8,q=0) #AIC picks 8,0, aic = 0.8735
+fit3 = arima(PVsmall$new_deaths_per_million, order=c(8,0,0), xreg = cbind(PVsmall[,c(8,9,10,11)]) )
+fit3 #AIC aic = 263.57; time, icu_patients_per_million_1 and hosp_patients_per_million_1 looks sig,
+acf(fit3$residuals[9:80]) # does not appear to be white noise
+ltest3 = ljung.wge(fit3$residuals)
+ltest3 #FTR.There is not enough evidence to suggest that the residuals are serailly correlated. null hypothesis = white noise, alternate- not white noise. pval = 0.975. Here we FTR null hypothesis, so this is white noise
+#Lagged variables - icu_patients_per_million_1 and hosp_patients_per_million_1 - Best aic so far with white noise residuals.
+mv_fit3_1 <- lm( new_deaths_per_million~ t[1:80]+new_cases_per_million+ icu_patients_per_million_1+hosp_patients_per_million_1+new_vaccinations_smoothed_per_million  ,data = PVsmall)
+aic.wge(mv_fit3_1$residuals, p=0:8,q=0) #AIC picks 7,0, aic = 0.5299
+fit3_1 = arima(PVsmall$new_deaths_per_million, order=c(7,0,0), xreg = cbind(t[1:80],PVsmall[,c(3,9,10,7)]) )
+fit3_1 #AIC= time, icu_patients_per_million_1 and hosp_patients_per_million_1 looks sig,
+acf(fit3_1$residuals[2:80]) # appears to be white noise
+ltest3_1 = ljung.wge(fit3_1$residuals) #FTR. There is not enough evidence to suggest that the residuals are serailly correlated. null hypothesis = white noise, alternate- not white noise. pval = 0.5670672 Here we FTR null hypothesis, so this is white noise
+#Forecast model 2_1
+preds_mv3_1 = predict(fit3_1, newxreg = cbind(t[81:96], Post_Vaccine$new_cases_per_million[81:96], Post_Vaccine$icu_patients_per_million_1[81:96],  Post_Vaccine$hosp_patients_per_million_1[81:96] , Post_Vaccine$new_vaccinations_smoothed_per_million[81:96]))
+ASE_mv3_1 = mean((Post_Vaccine$new_deaths_per_million[81:96] - preds_mv3_1$pred)^2)
+ASE_mv3_1  #4.948167
+#As Model 1 (no trend, no lag) has the best ASE. We will forecast future values using this model.
 m1_fit = lm(new_deaths_per_million~new_cases_per_million+new_vaccinations_smoothed_per_million+hosp_patients_per_million+icu_patients_per_million, data = Post_Vaccine)
-
 phi = aic.wge(m1_fit$residuals)
-m1_resids = fore.arma.wge(m1_fit$residuals, phi = phi$phi, n.ahead = 6)
-Pred_nc_6_m1 = fore.aruma.wge(Post_Vaccine$new_cases_per_million, n.ahead = 6)
-Pred_nv_6_m1 = fore.aruma.wge(Post_Vaccine$new_vaccinations_smoothed_per_million, n.ahead = 6)
-Pred_hs_6_m1 = fore.aruma.wge(Post_Vaccine$hosp_patients_per_million, n.ahead = 6)
-Pred_ic_6_m1 = fore.aruma.wge(Post_Vaccine$icu_patients_per_million, n.ahead = 6)
-next6_m1 = data.frame(new_cases_per_million=Pred_nc_6_m1$f, new_vaccinations_smoothed_per_million=Pred_nv_6_m1$f,hosp_patients_per_million=Pred_hs_6_m1$f,icu_patients_per_million=Pred_ic_6_m1$f)
+m1_resids_14 = fore.arma.wge(m1_fit$residuals, phi = phi$phi, n.ahead = 14)
+#Predicting future forecasts - 14
+Pred_nc_10_m1 = fore.aruma.wge(Post_Vaccine$new_cases_per_million, n.ahead = 14)
+Pred_nv_10_m1 = fore.aruma.wge(Post_Vaccine$new_vaccinations_smoothed_per_million, n.ahead = 14)
+Pred_hs_10_m1 = fore.aruma.wge(Post_Vaccine$hosp_patients_per_million, n.ahead = 14)
+Pred_ic_10_m1 = fore.aruma.wge(Post_Vaccine$icu_patients_per_million, n.ahead = 14)
+next10_m1 = data.frame(new_cases_per_million=Pred_nc_10_m1$f, new_vaccinations_smoothed_per_million=Pred_nv_10_m1$f,hosp_patients_per_million=Pred_hs_10_m1$f,icu_patients_per_million=Pred_ic_10_m1$f)
 #get predictions
-preds_m1_6 = predict(m1_fit, newdata = next6_m1) 
-Preds_m1_6_final = preds_m1_6 + m1_resids$f
-
-## Forecast plot for next 6 days
-plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,102), ylab = "New Death Rate Per Million", main = "New Death Per Million forecast for next 6 days")
-lines(seq(97,102,1), Preds_m1_6_final, type = "l", col = "red")
-
-
-#Pred for next 40 days
-
-m2_fit = lm(new_deaths_per_million~new_cases_per_million+new_vaccinations_smoothed_per_million+hosp_patients_per_million+icu_patients_per_million, data = Post_Vaccine)
-
-phi = aic.wge(m2_fit$residuals)
-m2_resids = fore.arma.wge(m2_fit$residuals, phi = phi$phi, n.ahead = 40)
+preds_m1_10 = predict(m1_fit, newdata = next10_m1)
+Preds_m1_10_final = preds_m1_10 + m1_resids_14$f
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,110), ylab = "new_deaths_per_million", main = "Next 10 day new_deaths_per_million Forecast")
+lines(seq(97,110,1),Preds_m1_10_final, col = "red")
+#Predicting future forecasts - 40
+m1_resids_40 = fore.arma.wge(m1_fit$residuals, phi = phi$phi, n.ahead = 40)
 Pred_nc_40_m1 = fore.aruma.wge(Post_Vaccine$new_cases_per_million, n.ahead = 40)
 Pred_nv_40_m1 = fore.aruma.wge(Post_Vaccine$new_vaccinations_smoothed_per_million, n.ahead = 40)
 Pred_hs_40_m1 = fore.aruma.wge(Post_Vaccine$hosp_patients_per_million, n.ahead = 40)
 Pred_ic_40_m1 = fore.aruma.wge(Post_Vaccine$icu_patients_per_million, n.ahead = 40)
 next40_m1 = data.frame(new_cases_per_million=Pred_nc_40_m1$f, new_vaccinations_smoothed_per_million=Pred_nv_40_m1$f,hosp_patients_per_million=Pred_hs_40_m1$f,icu_patients_per_million=Pred_ic_40_m1$f)
 #get predictions
-preds_m1_40 = predict(m2_fit, newdata = next40_m1) 
-Preds_m1_40_final = preds_m1_40 + m2_resids$f
-
-#Rolling Window 
-Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 6, d = 0, phi = fit2_m1$phi, theta = 0,s= 0) #18.18726
-
-## Forecast plot for last 6 days
-plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
-lines(seq(91,96,1),preds1$pred, col = "red")
-
-## Forecast plot for last 40 days
-plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
-lines(seq(57,96,1),preds_1$pred, col = "red")
-
-## Forecast plot for next 6 days
-plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,102), ylab = "New Death Rate Per Million", main = "New Death Per Million forecast for next 6 days")
-lines(seq(97,102,1), Preds_m1_6_final, type = "l", col = "red")
-
-## Forecast plot for next 40 days
-plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,136), ylab = "New Death Rate Per Million", main = "New Death Per Million forecast for next 6 days")
-lines(seq(97,136,1), Preds_m1_40_final, type = "l", col = "red")
-
+preds_m1_40 = predict(m1_fit, newdata = next40_m1)
+Preds_m1_40_final = preds_m1_40 + preds_m1_40
+#get predictions
+preds_m1_40 = predict(m1_fit, newdata = next40_m1)
+Preds_m1_40_final = preds_m1_40 + m1_resids_40$f
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,136), ylab = "new_deaths_per_million", main = "Next 40 day new_deaths_per_million Forecast")
+lines(seq(97,136,1),Preds_m1_40_final, col = "red")
 ```
-
 
 #### Multivariate  ( Trend added, no lag ) ####
 
