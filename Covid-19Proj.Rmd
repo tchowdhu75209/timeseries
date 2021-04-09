@@ -368,15 +368,12 @@ lines(seq(97,136,1),tail(pred_40$fcst$y1[,1],40), col = "red")
 
 
 ```{r pressure, echo=FALSE}
-
+#Build the model
 Vacc_Train = Post_Vaccine[1:80,]
 Vacc_Test = Post_Vaccine[81:96,]
-Vacc_Train2 = Post_Vaccine[1:56,]
-Vacc_Test2 = Post_Vaccine[57:96,]
 Vacc_xreg = data.frame(Vaccine = ts(Vacc_Train$new_vaccinations_smoothed_per_million))
 set.seed(2)
 Vacc_fit.mlp1 = mlp(ts(Vacc_Train$new_deaths_per_million) ,reps = 50,comb = "median", xreg = Vacc_xreg ) 
-
 Vacc_fit.mlp1 #mse 1.168
 plot(Vacc_fit.mlp1)
 fore_vacc_df_exp = data.frame(Vaccine = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
@@ -385,44 +382,23 @@ MLP1_ASE = mean((Vacc_Test$new_deaths_per_million- Vacc_fore.mlp1$mean)^2)
 MLP1_ASE #2.987259
 plot(Vacc_fore.mlp1)
 
-## Forecast for next 14 days
-Vacc_xreg_full = data.frame(Vaccine = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
-Vacc_fit.ml_full = mlp(ts(Post_Vaccine$new_deaths_per_million) ,reps = 50,comb = "median", xreg = Vacc_xreg_full ) 
-
-#New Vacc 
+#New Vacc - 14 day forecast on this explanatory variable
 fit.mlp.NV = mlp(ts(Post_Vaccine$new_vaccinations_smoothed_per_million),reps = 50,comb = "median")
 fore.mlp2.14.NV = forecast(fit.mlp.NV, h = 14)
-fore.mlp2.40.NV = forecast(fit.mlp.NV, h = 40)
-plot(fore.mlp2.14.NV) #for short term
-plot(fore.mlp2.40.NV) #for long term
-fore.vacc_14 = forecast(Vacc_fit.ml_full, h = 14, xreg = c(Vacc_xreg_full,fore.mlp2.14.NV$mean))
+plot(fore.mlp2.14.NV) 
+PV_DF_fore = data.frame(new_vaccinations_smoothed_per_million =ts(c(Post_Vaccine$new_vaccinations_smoothed_per_million,fore.mlp2.14.NV$mean)))
+fore.vacc_14 = forecast(Vacc_fit.ml_full, h = 14, xreg = PV_DF_fore)
 plot(fore.vacc_14)
 
-fore.vacc_40 = forecast(Vacc_fit.ml_full, h = 56)
+#New Vacc - 40 day forecast on this explanatory variable
+fit.mlp.NV = mlp(ts(Post_Vaccine$new_vaccinations_smoothed_per_million),reps = 50,comb = "median")
+fore.mlp2.40.NV = forecast(fit.mlp.NV, h = 40)
+plot(fore.mlp2.40.NV) 
+PV_DF_fore = data.frame(new_vaccinations_smoothed_per_million =ts(c(Post_Vaccine$new_vaccinations_smoothed_per_million,fore.mlp2.40.NV$mean)))
+fore.vacc_40 = forecast(Vacc_fit.ml_full, h = 40, xreg = PV_DF_fore)
 plot(fore.vacc_40)
 
-vacc_fore = data.frame(Vaccine = ts(fore.vacc$mean))
-Vacc_xreg_all = data.frame(Vaccine_all = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
-fit.mlp1 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50,comb = "median",xreg = Vacc_xreg_all)
-fit.mlp1
-plot(fit.mlp1)
-VCDF = data.frame(VC = ts(c(Vacc_xreg_all$Vaccine_all,vacc_fore$Vaccine)))
-fore.mlp1 = forecast(fit.mlp1, h = 6, xreg = VCDF)
-plot(fore.mlp1)
 
-## Forecast for next 40 days
-vacc_fit.mlp2 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50, comb = "mean")
-fore.vacc2 = forecast(vacc_fit.mlp1, h = 40)
-plot()
-vacc_fore2 = data.frame(Vaccine2 = ts(fore.vacc2$mean))
-vacc_fore2
-Vacc_xreg_all = data.frame(Vaccine_all = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
-fit.mlp1 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50,comb = "mean",xreg = Vacc_xreg_all)
-fit.mlp1
-plot(fit.mlp1)
-VCDF2 = data.frame(VC = ts(c(Vacc_xreg_all$Vaccine_all,vacc_fore2$Vaccine2)))
-fore.mlp2 = forecast(fit.mlp1, h = 40, xreg = VCDF2)
-plot(fore.mlp2)
 
 
 ```
@@ -431,10 +407,7 @@ plot(fore.mlp2)
 #### MLP With all explanatory variables####
 
 ```{r pressure, echo=FALSE}
-library(nnfor)
-library(forecast)
-library(vars)
-library(tswge)
+
 VC_train = Post_Vaccine[1:80,]
 VC_test = Post_Vaccine[81:96,]
 
@@ -488,9 +461,9 @@ plot(fore.mlp2.40.IC) #for long term
 PV_DF_fore1 = data.frame(t = ts(seq(1:110)),new_cases_per_million = ts(c(Post_Vaccine$new_cases_per_million,fore.mlp2.14.NC$mean)), icu_patients_per_million = ts(c(Post_Vaccine$icu_patients_per_million,fore.mlp2.14.IC$mean)),
                         hosp_patients_per_million = ts(c(Post_Vaccine$hosp_patients_per_million,fore.mlp2.14.HS$mean)), new_vaccinations_smoothed_per_million =ts(c(Post_Vaccine$new_vaccinations_smoothed_per_million,fore.mlp2.14.NV$mean)))
 
-fit.mlp2_16 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50,comb = "median",xreg = PV_DF_fore1)
-fore.mlp2_16 = forecast(fit.mlp2_16, h = 14, xreg = PV_DF_fore1)
-plot(fore.mlp2_16)
+fit.mlp2_14 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50,comb = "median",xreg = PV_DF_fore1)
+fore.mlp2_14 = forecast(fit.mlp2_16, h = 14, xreg = PV_DF_fore1)
+plot(fore.mlp2_14)
 
 
 #Forecast 40 days
