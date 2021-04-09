@@ -9,8 +9,8 @@ output: html_document
 1) All Covid
 2) Post Vaccine
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r}
+
 library(nnfor)
 library(forecast)
 library(vars)
@@ -52,8 +52,8 @@ return(WindowedASE)
 #### EDA ####
 #############
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r }
+
 
 
 # All Covid Data
@@ -76,7 +76,7 @@ plotts.sample.wge(Post_Vaccine$new_deaths_per_million)
 #### ARIMA Model 1 (with seasonal component, s = 7)
 
 
-```{r pressure, echo=FALSE}
+```{r , echo=FALSE}
 
 #ARIMA Models as this data is assumed non-stationary
 
@@ -140,7 +140,7 @@ lines(seq(97,476,1),for_aruma2_s7_f380$f, col = "red")
 #### ARMA MODEL 2 - (with (1-B) component)  ####
 
 
-```{r pressure, echo=FALSE}
+```{r , echo=FALSE}
 
 # overfitting to check non stationary portion of the data
 est.ar.wge(Post_Vaccine$new_deaths_per_million, p=8, type='burg') #has one 1-0.9868B
@@ -193,7 +193,7 @@ Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horiz
 #### ARIMA - (with both seasonal(s = 7) and trend(1-B) components)  ####
 
 
-```{r pressure, echo=FALSE}
+```{r , echo=FALSE}
 
 #Seasonality plus 1-B
 plotts.sample.wge(pv_dif1)
@@ -254,7 +254,7 @@ lines(seq(97,476,1),for_aruma2_s7d1_f380$f, col = "red")
 
 #### Multivariate - model with only vaccine variable ####
 
-```{r}
+```{r , echo=FALSE}
 # Considering Only new_vaccinations_smoothed_per_million
 mv_fit0 <- lm( new_deaths_per_million~ new_vaccinations_smoothed_per_million  ,data = PVsmall)
 aic.wge(mv_fit1$residuals, p=0:8,q=0) #AIC picks 8,0 ; aic =0.8019881
@@ -300,7 +300,7 @@ lines(seq(97,136,1),Preds_m1_40_final, col = "red")
 #### Multivariate - model with all explanatory variables ####
 
 
-```{r}
+```{r , echo=FALSE}
 #Multivariate - Model 1 - No trend and no lags
 PVsmall = Post_Vaccine[1:80,]
 mv_fit1 <- lm( new_deaths_per_million~ new_cases_per_million+ icu_patients_per_million+hosp_patients_per_million+new_vaccinations_smoothed_per_million  ,data = PVsmall)
@@ -433,7 +433,7 @@ lines(seq(97,136,1),Preds_m1_40_final, col = "red")
 
 
 
-```{r pressure, echo=FALSE}
+```{r , echo=FALSE}
 
 PVsmall = Post_Vaccine[1:80,]
 VAR_PV = VAR(cbind(PVsmall$new_deaths_per_million,PVsmall$new_cases_per_million,PVsmall$icu_patients_per_million,PVsmall$hosp_patients_per_million,PVsmall$new_vaccinations_smoothed_per_million),lag.max = 8, type = "both")
@@ -458,7 +458,7 @@ lines(seq(97,136,1),tail(pred_40$fcst$y1[,1],40), col = "red")
 #### VAR MODEL 2 - with lagged variables (Hospital and ICU) ###
 
 
-```{r pressure, echo=FALSE}
+```{r , echo=FALSE}
 
 #####lagged icu_1, hosp_1######
 VAR_PV = VAR(cbind(PVsmall$new_deaths_per_million[2:80],PVsmall$new_cases_per_million[2:80],PVsmall$icu_patients_per_million_1[2:80],PVsmall$hosp_patients_per_million_1[2:80],PVsmall$new_vaccinations_smoothed_per_million[2:80]),lag.max = 8, type = "both")
@@ -493,7 +493,7 @@ lines(seq(97,136,1),tail(pred_40$fcst$y1[,1],40), col = "red")
 #### MLP With Vaccine Variable Only####
 
 
-```{r pressure, echo=FALSE}
+```{r , echo=FALSE}
 #Build the model
 Vacc_Train = Post_Vaccine[1:80,]
 Vacc_Test = Post_Vaccine[81:96,]
@@ -532,7 +532,7 @@ plot(fore.vacc_40)
 
 #### MLP With all explanatory variables####
 
-```{r pressure, echo=FALSE}
+```{r , echo=FALSE}
 
 VC_train = Post_Vaccine[1:80,]
 VC_test = Post_Vaccine[81:96,]
@@ -611,7 +611,7 @@ plot(fore.mlp2_40)
 
 #### Ensemble Model with NN (all variables) Model and VAR 2####
 
-```{r pressure, echo=FALSE}
+```{r , echo=FALSE}
 
 ensemble  = (preds6$fcst$y2[,1] + allexp_fore.m2p1$mean)/2
 
