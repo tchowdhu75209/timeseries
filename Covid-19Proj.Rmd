@@ -13,7 +13,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tswge)
 All_Covid <- read_csv("All_Covid.csv")
-
 Post_Vaccine <- read_csv("Post_Vaccine.csv")
 
 Rolling_Window_ASE = function(series, trainingSize, horizon, s, d, phis, thetas)
@@ -194,7 +193,7 @@ AIC(fit1) #322.8156
 acf(fit1$residuals) # looks like white noise behavior
 ltest = ljung.wge(fit$resid)
 ltest$pval
-
+M1_final_res=aic.wge(fit1i$residuals,p=0:10, q=0)
 
 # ASE for model with no lag and no trend (last 5)
 Post_Vaccine2 = Post_Vaccine[1:91,]
@@ -212,13 +211,13 @@ fit2_m1
 AIC(fit2_m1) #312.5972
 
 #Pred for past 6 days 
-preds1 = predict(fit2_m1, newxreg = cbind(Post_Vaccine$new_cases_per_million[91:96], Post_Vaccine$icu_patients_per_million[91:96],Post_Vaccine$hosp_patients_per_million[91:96], Post_Vaccine$new_vaccinations_smoothed_per_million[91:96]))
+preds1 = predict(fit1, newxreg = cbind(Post_Vaccine$new_cases_per_million[83:96], Post_Vaccine$icu_patients_per_million[83:96],Post_Vaccine$hosp_patients_per_million[83:96], Post_Vaccine$new_vaccinations_smoothed_per_million[91:96]))
 
 ASE1_short = mean((Post_Vaccine$new_deaths_per_million[91:96] - preds1$pred)^2)
 ASE1_short #2.076967
 
 # Pred for past 40 days
-preds_1 = predict(fit2_m1, newxreg = cbind(Post_Vaccine$new_cases_per_million[57:96], Post_Vaccine$icu_patients_per_million[57:96],Post_Vaccine$hosp_patients_per_million[57:96], Post_Vaccine$new_vaccinations_smoothed_per_million[57:96]))
+preds_1 = predict(fit1, newxreg = cbind(Post_Vaccine$new_cases_per_million[57:96], Post_Vaccine$icu_patients_per_million[57:96],Post_Vaccine$hosp_patients_per_million[57:96], Post_Vaccine$new_vaccinations_smoothed_per_million[57:96]))
 
 ASE_1_long = mean((Post_Vaccine$new_deaths_per_million[57:96] - preds_1$pred)^2)
 ASE_1_long #7.317226
@@ -584,6 +583,7 @@ plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,136
 lines(seq(97,136,1), Preds_m3_40_final, type = "l", col = "red")
 
 
+
 ```
 
 
@@ -769,88 +769,75 @@ library(nnfor)
 library(forecast)
 library(vars)
 library(tswge)
-Vacc_Train = Post_Vaccine[1:90,]
-Vacc_Test = Post_Vaccine[91:96,]
-Vacc_Train22 = Post_Vaccine[1:56,]
-Vacc_Test23 = Post_Vaccine[57:96,]
-all_exp_xreg = data.frame(Vaccine = ts(Vacc_Train$new_vaccinations_smoothed_per_million), NewCase = ts(Vacc_Train$new_cases_per_million), Hosp = ts(Vacc_Train$hosp_patients_per_million), ICU = ts(Vacc_Train$icu_patients_per_million))
+VC_train = Post_Vaccine[1:80,]
+VC_test = Post_Vaccine[81:96,]
+
+all_exp_xreg = data.frame(Vaccine = ts(t = ts(seq(1:80)),VC_train$new_vaccinations_smoothed_per_million), NewCase = ts(VC_train$new_cases_per_million), Hosp = ts(VC_train$hosp_patients_per_million), ICU = ts(VC_train$icu_patients_per_million))
 set.seed(2)
-exp_fit.mlp1 = mlp(ts(Vacc_Train$new_deaths_per_million) ,reps = 50,comb = "mean", xreg = all_exp_xreg ) #combine all 50 forcast
-exp_fit.mlp11 = mlp(ts(Vacc_Train22$new_deaths_per_million) ,reps = 50,comb = "mean", xreg = all_exp_xreg )
-exp_fit.mlp11# 5 hnode #mse 1.11
-plot(exp_fit.mlp1)
+allexp_fit_mlp2 = mlp(ts(VC_train$new_deaths_per_million), reps = 50, comb = "median",  xreg = all_exp_xreg )
+plot(allexp_fit_mlp2)
 fore_all_exp_df = data.frame(Vaccine = ts(Post_Vaccine$new_vaccinations_smoothed_per_million), NewCase = ts(Post_Vaccine$new_cases_per_million), Hosp = ts(Post_Vaccine$hosp_patients_per_million), ICU = ts(Post_Vaccine$icu_patients_per_million))
-allexp_fore.m2p1 = forecast(exp_fit.mlp1, h = 6, xreg = fore_all_exp_df) 
-allexp_fore.m2p2 = forecast(exp_fit.mlp11, h = 40, xreg = fore_all_exp_df) 
-plot(allexp_fore.m2p1)
-MLP_ASE2 = mean((Vacc_Test$new_deaths_per_million- allexp_fore.m2p1$mean)^2)
-MLP_ASE2 #1.988805
-MLP_ASE22 = mean((Vacc_Test23$new_deaths_per_million- allexp_fore.m2p2$mean)^2)
-MLP_ASE22 #7.560479
-  
+allexp_fore.m2 = forecast(allexp_fit_mlp2, h = 16, xreg = fore_all_exp_df) 
+MLP2_ASE = mean((VC_test$new_deaths_per_million- allexp_fore.m2$mean)^2)
+MLP2_ASE #1.28
 
-# Forecast plot for last 6 days
+#Forecast - fitting on last 16 days
 plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,96), ylab = "Death Rate Per Million", main = "forecast plot for last 6 days")
-lines(seq(91,96), allexp_fore.m2p1$mean, type = "l", col = "red")
+lines(seq(81,96), allexp_fore.m2$mean, type = "l", col = "red")
 
-## Forecast plot for last 40 days
-plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
-lines(seq(57,96,1),allexp_fore.m2p2$mean, col = "red")
+### Forecast on future short term (14 days) and long term (40 days) ###
 
-## Forecast for next 6 days
+#New Case Forecast
+fit.mlp.NC = mlp(ts(Post_Vaccine$new_cases_per_million),reps = 50,comb = "median")
 
-All_Var = data.frame(Vaccine = ts(Post_Vaccine$new_vaccinations_smoothed_per_million), NewCase = ts(Post_Vaccine$new_cases_per_million), Hosp = ts(Post_Vaccine$hosp_patients_per_million), ICU = ts(Post_Vaccine$icu_patients_per_million))
+fore.mlp2.14.NC = forecast(fit.mlp.NC, h = 14)
+fore.mlp2.40.NC = forecast(fit.mlp.NC, h = 40)
+plot(fore.mlp2.14.NC) #for short term
+plot(fore.mlp2.40.NC) #for long term
 
-fit.mlp2 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50,comb = "mean",xreg = All_Var)
-fit.mlp2 #0.3717
-plot(fit.mlp2)
-
-#New Case
-fit.mlp.NC = mlp(ts(Post_Vaccine$new_cases_per_million),reps = 50,comb = "mean")
-fore.mlp2.6.NC = forecast(fit.mlp.NC, h = 6)
-NCvar_DF_fore = data.frame(NC= ts(fore.mlp2.6.NC$mean))
-NCvar_DF_fore
 
 #New Vacc
-fit.mlp.NV = mlp(ts(Post_Vaccine$new_vaccinations_smoothed_per_million),reps = 50,comb = "mean")
-fore.mlp2.6.NV = forecast(fit.mlp.NV, h = 6)
-NVvar_DF_fore = data.frame(NV= ts(fore.mlp2.6.NV$mean))
-NVvar_DF_fore
+fit.mlp.NV = mlp(ts(Post_Vaccine$new_vaccinations_smoothed_per_million),reps = 50,comb = "median")
+fore.mlp2.14.NV = forecast(fit.mlp.NV, h = 14)
+fore.mlp2.40.NV = forecast(fit.mlp.NV, h = 40)
+plot(fore.mlp2.14.NV) #for short term
+plot(fore.mlp2.40.NV) #for long term
 
 #New Hos
-fit.mlp.HS = mlp(ts(Post_Vaccine$hosp_patients_per_million),reps = 50,comb = "mean")
-fore.mlp2.6.HS = forecast(fit.mlp.HS, h = 6)
-HSvar_DF_fore = data.frame(HS= ts(fore.mlp2.6.HS$mean))
-HSvar_DF_fore
+fit.mlp.HS = mlp(ts(Post_Vaccine$hosp_patients_per_million),reps = 50,comb = "median")
+fore.mlp2.14.HS = forecast(fit.mlp.HS, h = 14)
+fore.mlp2.40.HS = forecast(fit.mlp.HS, h = 40)
+plot(fore.mlp2.14.HS) #for short term
+plot(fore.mlp2.40.HS) #for long term
 
 #New ICU
-fit.mlp.IC = mlp(ts(Post_Vaccine$icu_patients_per_million),reps = 50,comb = "mean")
-fore.mlp2.6.IC = forecast(fit.mlp.IC, h = 6)
-ICvar_DF_fore = data.frame(IC= ts(fore.mlp2.6.IC$mean))
-ICvar_DF_fore
+fit.mlp.IC = mlp(ts(Post_Vaccine$icu_patients_per_million),reps = 50,comb = "median")
+fore.mlp2.14.IC = forecast(fit.mlp.HS, h = 14)
+fore.mlp2.40.IC = forecast(fit.mlp.HS, h = 40)
+plot(fore.mlp2.14.IC) #for short term
+plot(fore.mlp2.40.IC) #for long term
 
-#Final Step for Plott
-AllVarDF = data.frame(AllV = ts(c(All_Var$NewCase, All_Var$Vaccine,All_Var$Hosp, All_Var$ICU,NCvar_DF_fore$NC,NVvar_DF_fore$NV,HSvar_DF_fore$HS,ICvar_DF_fore$IC)))
-fore.mlp2_f = forecast(fit.mlp2, h = 6, xreg = AllVarDF)
-plot(fore.mlp2_f)
+#Forecast 14 days
+
+PV_DF_fore1 = data.frame(t = ts(seq(1:110)),new_cases_per_million = ts(c(Post_Vaccine$new_cases_per_million,fore.mlp2.14.NC$mean)), icu_patients_per_million = ts(c(Post_Vaccine$icu_patients_per_million,fore.mlp2.14.IC$mean)),
+                        hosp_patients_per_million = ts(c(Post_Vaccine$hosp_patients_per_million,fore.mlp2.14.HS$mean)), new_vaccinations_smoothed_per_million =ts(c(Post_Vaccine$new_vaccinations_smoothed_per_million,fore.mlp2.14.NV$mean)))
+
+fit.mlp2_16 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50,comb = "median",xreg = PV_DF_fore1)
+fore.mlp2_16 = forecast(fit.mlp2_16, h = 14, xreg = PV_DF_fore1)
+plot(fore.mlp2_16)
+
+
+#Forecast 40 days
+
+PV_DF_fore = data.frame(t = ts(seq(1:136)),new_cases_per_million = ts(c(Post_Vaccine$new_cases_per_million,fore.mlp2.40.NC$mean)), icu_patients_per_million = ts(c(Post_Vaccine$icu_patients_per_million,fore.mlp2.40.IC$mean)),
+                        hosp_patients_per_million = ts(c(Post_Vaccine$hosp_patients_per_million,fore.mlp2.40.HS$mean)), new_vaccinations_smoothed_per_million =ts(c(Post_Vaccine$new_vaccinations_smoothed_per_million,fore.mlp2.40.NV$mean)))
+
+fit.mlp2_40 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50,comb = "median",xreg = PV_DF_fore)
+fore.mlp2_40 = forecast(fit.mlp2_40, h = 40, xreg = PV_DF_fore)
+plot(fore.mlp2_40)
 
 
 
-
-
-## Forecast for next 40 days - If the 6 day forecast gets fixed then I can fix this one.
-vacc_fit.mlp2 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50, comb = "mean")
-fore.vacc2 = forecast(vacc_fit.mlp1, h = 49)
-
-vacc_fore2 = data.frame(Vaccine2 = ts(fore.vacc2$mean))
-vacc_fore2
-Vacc_xreg_all = data.frame(Vaccine_all = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
-fit.mlp1 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50,comb = "mean",xreg = Vacc_xreg_all)
-fit.mlp1
-plot(fit.mlp1)
-VCDF2 = data.frame(VC = ts(c(Vacc_xreg_all$Vaccine_all,vacc_fore2$Vaccine2)))
-fore.mlp2 = forecast(fit.mlp1, h = 40, xreg = VCDF2)
-plot(fore.mlp2)
 
 
 ```
