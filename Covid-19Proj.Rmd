@@ -218,6 +218,9 @@ plotts.sample.wge(arima_s7_d1$res, arlimits = T) #Much better model residuals
 
 #Forecast last 10
 for_aruma2_s7d1 = fore.aruma.wge(Post_Vaccine$new_deaths_per_million,d=1,s=7,  phi = arima_s7_d1$phi,n.ahead = 10, lastn = T)
+
+for_aruma2_s7d1_16 = fore.aruma.wge(Post_Vaccine$new_deaths_per_million,d=1,s=7,  phi = arima_s7_d1$phi,n.ahead = 16, lastn = T) #forecast last 16 for ensemble model
+
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
 lines(seq(87,96,1),for_aruma2_s7d1$f, col = "red")
 
@@ -508,6 +511,10 @@ MLP1_ASE = mean((Vacc_Test$new_deaths_per_million- Vacc_fore.mlp1$mean)^2)
 MLP1_ASE #2.987259
 plot(Vacc_fore.mlp1)
 
+#Model for future forecasts
+Vacc_xreg_full = data.frame(Vaccine = ts(Post_Vaccine$new_vaccinations_smoothed_per_million))
+Vacc_fit.ml_full = mlp(ts(Post_Vaccine$new_deaths_per_million), reps = 50, comb = "median", xreg = Vacc_xreg_full)
+
 #New Vacc - 14 day forecast on this explanatory variable
 fit.mlp.NV = mlp(ts(Post_Vaccine$new_vaccinations_smoothed_per_million),reps = 50,comb = "median")
 fore.mlp2.14.NV = forecast(fit.mlp.NV, h = 14)
@@ -551,6 +558,9 @@ plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,96)
 lines(seq(81,96), allexp_fore.m2$mean, type = "l", col = "red")
 
 ### Forecast on future short term (14 days) and long term (40 days) ###
+#Model for future forecasts
+all_exp_xreg2 = data.frame(Post_Vaccine$new_vaccinations_smoothed_per_million, NewCase = ts(Post_Vaccine$new_cases_per_million), Hosp = ts(Post_Vaccine$hosp_patients_per_million), ICU = ts(Post_Vaccine$icu_patients_per_million))
+Vacc_fit.ml_full2 = mlp(ts(Post_Vaccine$new_deaths_per_million), reps = 50, comb = "median", xreg = Vacc_xreg_full2)
 
 #New Case Forecast
 fit.mlp.NC = mlp(ts(Post_Vaccine$new_cases_per_million),reps = 50,comb = "median")
@@ -588,7 +598,7 @@ PV_DF_fore1 = data.frame(t = ts(seq(1:110)),new_cases_per_million = ts(c(Post_Va
                         hosp_patients_per_million = ts(c(Post_Vaccine$hosp_patients_per_million,fore.mlp2.14.HS$mean)), new_vaccinations_smoothed_per_million =ts(c(Post_Vaccine$new_vaccinations_smoothed_per_million,fore.mlp2.14.NV$mean)))
 
 fit.mlp2_14 = mlp(ts(Post_Vaccine$new_deaths_per_million),reps = 50,comb = "median",xreg = PV_DF_fore1)
-fore.mlp2_14 = forecast(fit.mlp2_16, h = 14, xreg = PV_DF_fore1)
+fore.mlp2_14 = forecast(fit.mlp2_14, h = 14, xreg = PV_DF_fore1)
 plot(fore.mlp2_14)
 
 
@@ -612,16 +622,25 @@ plot(fore.mlp2_40)
 #### Ensemble Model with NN (all variables) Model and VAR 2####
 
 ```{r , echo=FALSE}
-
-ensemble  = (preds6$fcst$y2[,1] + allexp_fore.m2p1$mean)/2
+# Multivariate - one variable and MLP with all variables
+ensemble  = (preds_mv0$pred + allexp_fore.m2$mean)/2
 
 #Plot
 plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,96), ylab = "Death Rate Per Million", main = "Ensemble Model with NN (All Var) vs VAR 2 model")
-lines(seq(91,96,1), ensemble, type = "l", col = "green")
+lines(seq(81,96,1), ensemble, type = "l", col = "green")
 
-ASE_en = mean((Post_Vaccine$new_deaths_per_million[91:96] - ensemble)^2)
-ASE_en #5.659218
+ASE_en = mean((Post_Vaccine$new_deaths_per_million[81:96] - ensemble)^2)
+ASE_en #1.590614
 
+#Univariate Model 3 and MLP with all variables
+ensemble2  = (for_aruma2_s7d1_16$f + allexp_fore.m2$mean)/2
+
+#Plot
+plot(seq(1,96,1), Post_Vaccine$new_deaths_per_million, type = "l",xlim = c(0,96), ylab = "Death Rate Per Million", main = "Ensemble Model with NN (All Var) vs VAR 2 model")
+lines(seq(81,96,1), ensemble2, type = "l", col = "green")
+
+ASE_en2 = mean((Post_Vaccine$new_deaths_per_million[81:96] - ensemble2)^2)
+ASE_en2 #1.836393
 
 ```
 
