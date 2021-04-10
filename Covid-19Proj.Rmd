@@ -6,6 +6,8 @@ output:
   pdf_document: default
   html_document: default
 ---
+
+
 ### Objective:
 Analyze  Covid-19 Death Rate(per day) and the influence of other factors- New cases per day, Vaccination Rates, number of hospitalizations and number of ICU patients per day. We will perform the following taks:
 1) Performing Univariate analysis on 'New Deaths per million'.
@@ -25,7 +27,6 @@ Analyze  Covid-19 Death Rate(per day) and the influence of other factors- New ca
 
 ### Source:
 Coronavirus (COVID-19) Vaccinations - Statistics and Research - Our World in Data. It is updated daily and includes data on confirmed cases, deaths, hospitalizations, testing, and vaccinations as well as other variables of potential interest.
-
 
 ```{r}
 
@@ -97,16 +98,19 @@ plotts.sample.wge(Post_Vaccine$new_deaths_per_million)
 ```{r , echo=FALSE}
 
 #ARIMA Models as this data is assumed non-stationary
-
 # Step 1 Check if data is white noise
 plotts.sample.wge(Post_Vaccine$new_deaths_per_million)
 acf(Post_Vaccine$new_deaths_per_million) 
 parzen.wge(Post_Vaccine$new_deaths_per_million)
-#Not white noise, Autocorrelation are correlated. Damped sinusoidal indicating seasonality
+# This data set is not white noise, Autocorrelation are correlated. Damped sinusoidal indicating seasonality.
 
-
+#Bulding Models
 #ARIMA Model 1 Only Seasonality 
+
+#Take out the s=7 (1-B^7) term from the model
 pv_s7 <- artrans.wge(Post_Vaccine$new_deaths_per_million,phi.tr = c(rep(0,6),1)) #Looks statinary
+
+#Plot the timeseries without the seasonal component
 plotts.sample.wge(pv_s7)
 
 #Overfitting
@@ -115,42 +119,45 @@ est.ar.wge(Post_Vaccine$new_deaths_per_million, p=10, type='burg')
 #aic with defaults
 aic.wge(pv_s7) #=p=4, q=1
 arma_s7_1 <- est.arma.wge(pv_s7, p=4, q=1)
+
 #residuals
 plotts.sample.wge(arma_s7_1$res,arlimits = T) #Residuals not white noise
-#aic5.wge(pv_s7, p=0:13, q=0:3) #Pick p=7, q=3
+
 #Check bic
 aic5.wge(pv_s7, p=0:13, q=0:3, type="bic")  #BIC picks ARMA(1,0) model. Looking at the data, this does not look appropriate.
-#arma_s7_d1 <- est.arma.wge(pv_s7_d1, p=7, q=3)
 
+#arma_s7_d1 <- est.arma.wge(pv_s7_d1, p=7, q=3)
 for_aruma2_s7 = fore.aruma.wge(Post_Vaccine$new_deaths_per_million,s=7,  phi = arma_s7_1$phi,n.ahead = 10, lastn = T)
-plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96))
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,96), main = "Last 10 Day forecast with p=7, q=3 and s=7")
 lines(seq(87,96,1),for_aruma2_s7$f, col = "red")
 
 #ASE
 arma_s7_ase = mean((for_aruma2_s7$f - Post_Vaccine$new_deaths_per_million[(96-10+1):96])^2)
-arma_s7_ase #2.076175
+arma_s7_ase
 
 #Rolling_Window_ASE
 Rolling_Window_ASE(Post_Vaccine$new_deaths_per_million, trainingSize = 70, horizon = 10, d = 0, phis = arma_s7_1$phi,
                    s= 7, thetas = arma_s7_1$theta)
-#2.253863
 
-
+#Forecasting
+#Next 10
 for_aruma2_s7_f10 = fore.aruma.wge(Post_Vaccine$new_deaths_per_million,s=7, phi = arma_s7_1$phi,n.ahead = 10)
-plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,101))
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,101), main = "Next 10 Day forecast with p=7, q=3 and s=7")
 lines(seq(97,106,1),for_aruma2_s7_f10$f, col = "red")
 
+#Next 40
 for_aruma2_s7_f40 = fore.aruma.wge(Post_Vaccine$new_deaths_per_million,s=7, phi = arma_s7_1$phi,n.ahead = 40)
-plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,136))
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,136), main = "Next 40 Day forecast with with p=7, q=3 and s=7")
 lines(seq(96,135,1),for_aruma2_s7_f40$f, col = "red")
 
-
+#Next 180
 for_aruma2_s7_f180 = fore.aruma.wge(Post_Vaccine$new_deaths_per_million,s=7, phi = arma_s7_1$phi,n.ahead = 180)
-plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,276))
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,276), main = "Next 180 Day forecast with p=7, q=3 and s=7")
 lines(seq(97,276,1),for_aruma2_s7_f180$f, col = "red")
 
+#Next 380
 for_aruma2_s7_f380 = fore.aruma.wge(Post_Vaccine$new_deaths_per_million,s=7, phi = arma_s7_1$phi,n.ahead = 380)
-plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,476))
+plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,476), main = "Next 10 Day forecast with p=7, q=3 and s=7")
 lines(seq(97,476,1),for_aruma2_s7_f380$f, col = "red")
 
 ```
@@ -459,7 +466,6 @@ lines(seq(97,136,1),Preds_m1_40_final, col = "red")
 ```
 
 
-
 #### VAR MODEL 1 with no lagged variables ####
 
 
@@ -479,10 +485,6 @@ lines(seq(97,110),tail(pred_14$fcst$y1[,1],14), col = "red")
 pred_40 = predict(VAR_PV,n.ahead = 56)
 plot(as.numeric(Post_Vaccine$new_deaths_per_million), type = "l", xlim = c(1,136), ylab = "new_deaths_per_million", main = "Next 40 day new_deaths_per_million Forecast")
 lines(seq(97,136,1),tail(pred_40$fcst$y1[,1],40), col = "red")
-
-
-
-
 ```
 
 
@@ -520,9 +522,7 @@ lines(seq(97,136,1),tail(pred_40$fcst$y1[,1],40), col = "red")
 ## We will proceed with Model 2 - with lagged variables ##
 ```
 
-
 #### MLP With Vaccine Variable Only####
-
 
 ```{r , echo=FALSE}
 #Build the model
@@ -558,12 +558,7 @@ plot(fore.mlp2.40.NV)
 PV_DF_fore = data.frame(new_vaccinations_smoothed_per_million =ts(c(Post_Vaccine$new_vaccinations_smoothed_per_million,fore.mlp2.40.NV$mean)))
 fore.vacc_40 = forecast(Vacc_fit.ml_full, h = 40, xreg = PV_DF_fore)
 plot(fore.vacc_40)
-
-
-
-
 ```
-
 
 #### MLP With all explanatory variables####
 
