@@ -3,9 +3,13 @@
 ## Contents: 
 
 **1. Covid-19Proj.Rmd:** Final document in R. 
+
 **2. RMD Summary.mp4:** Presentation video.
-**3. DS_6331_TaiChowdhury_SimerpreetReddy_v1.html:** First version of the submitted file in HTML format. 
+
+**3. DS_6331_TaiChowdhury_SimerpreetReddy_v1.html:** First version of the submitted file in HTML format.
+
 **4. DS_6331_TaiChowdhury_SimerpreetReddy_v1.docs:** First version of the submitted file in MS Word format. 
+
 **5. Simer_Supporting_docDS-6331_Project_SimerpreetReddy_TaiChowdhury.pptx:** Main powerpoint document.
 
 ### Project Overview:**
