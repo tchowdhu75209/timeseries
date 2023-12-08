@@ -2,7 +2,7 @@
 
 ## Contents: 
 
-**1. Covid-19Proj.Rmd:** Final document in R. [^1]
+**1. Covid-19Proj.Rmd:** Final document in R. 
 
 **2. RMD Summary.mp4:** Presentation video.
 
